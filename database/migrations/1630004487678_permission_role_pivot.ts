@@ -9,11 +9,18 @@ export default class PermissionRole extends BaseSchema {
       table
         .integer('permission_id')
         .unsigned()
+        .notNullable()
         .references('id')
         .inTable('permissions')
         .onDelete('CASCADE')
 
-      table.integer('role_id').unsigned().references('id').inTable('roles').onDelete('CASCADE')
+      table
+        .integer('role_id')
+        .unsigned()
+        .notNullable()
+        .references('id')
+        .inTable('roles')
+        .onDelete('CASCADE')
 
       table.timestamp('created_at').notNullable()
       table.timestamp('updated_at').notNullable()
