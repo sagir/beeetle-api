@@ -5,7 +5,10 @@
  * file.
  */
 
-import { CorsConfig } from '@ioc:Adonis/Core/Cors'
+import { AllowedValuesTypes, CorsConfig } from '@ioc:Adonis/Core/Cors'
+import Application from '@ioc:Adonis/Core/Application'
+
+const ALLOWED_ORIGINS: string[] = ['beeetle-app.com']
 
 const corsConfig: CorsConfig = {
   /*
@@ -20,7 +23,7 @@ const corsConfig: CorsConfig = {
   | you can define a function to enable/disable it on per request basis as well.
   |
   */
-  enabled: false,
+  enabled: true,
 
   // You can also use a function that return true or false.
   // enabled: (request) => request.url().startsWith('/api')
@@ -44,7 +47,13 @@ const corsConfig: CorsConfig = {
   |                     one of the above values.
   |
   */
-  origin: true,
+  origin: (requestOrigin): AllowedValuesTypes => {
+    if (Application.inProduction) {
+      return ALLOWED_ORIGINS.includes(requestOrigin)
+    }
+
+    return true
+  },
 
   /*
   |--------------------------------------------------------------------------
