@@ -15,5 +15,5 @@ export default class Permission extends BaseModel {
   public createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
-  public updatedAt: DateTime
+  public updatedAt?: DateTime
 }
