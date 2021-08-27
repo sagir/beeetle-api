@@ -22,8 +22,7 @@ export default class PermissionRole extends BaseSchema {
         .inTable('roles')
         .onDelete('CASCADE')
 
-      table.timestamp('created_at').notNullable()
-      table.timestamp('updated_at').notNullable()
+      table.timestamps()
 
       table.unique(['permission_id', 'role_id'])
     })
