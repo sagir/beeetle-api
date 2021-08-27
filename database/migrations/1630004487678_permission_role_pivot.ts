@@ -5,7 +5,6 @@ export default class PermissionRole extends BaseSchema {
 
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table.increments('id').primary()
       table
         .integer('permission_id')
         .unsigned()
@@ -21,8 +20,6 @@ export default class PermissionRole extends BaseSchema {
         .references('id')
         .inTable('roles')
         .onDelete('CASCADE')
-
-      table.timestamps()
 
       table.unique(['permission_id', 'role_id'])
     })
