@@ -1,6 +1,5 @@
 import { BasePolicy } from '@ioc:Adonis/Addons/Bouncer'
 import User from 'App/Models/User'
-import Role from 'App/Models/Role'
 import { hasPermission } from 'App/utils/database/permissionHelpers'
 
 export default class RolePolicy extends BasePolicy {
