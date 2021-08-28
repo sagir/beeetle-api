@@ -33,7 +33,7 @@ export default class User extends BaseModel {
     }
   }
 
-  @manyToMany(() => Role, { pivotTimestamps: true })
+  @manyToMany(() => Role)
   public roles: ManyToMany<typeof Role>
 
   // scopes

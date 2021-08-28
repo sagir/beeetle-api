@@ -18,7 +18,7 @@ export default class Permission extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   public updatedAt: DateTime
 
-  @manyToMany(() => Role, { pivotTimestamps: true })
+  @manyToMany(() => Role)
   public roles: ManyToMany<typeof Role>
 
   @manyToMany(() => Permission, {
