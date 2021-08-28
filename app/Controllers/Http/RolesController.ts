@@ -35,8 +35,8 @@ export default class RolesController {
     role.description = request.input('description', undefined)
 
     try {
-      await role.save()
-      await role.related('permissions').attach(request.input('permissions'))
+      await role.useTransaction(trx).save()
+      await role.related('permissions').attach(request.input('permissions'), trx)
       await trx.commit()
     } catch (error) {
       await trx.rollback()
@@ -57,13 +57,23 @@ export default class RolesController {
     await ctx.bouncer.with('RolePolicy').authorize('update')
     const role = await Role.findByOrFail('slug', ctx.params.slug)
     await ctx.request.validate(new RoleValidator(ctx, role.id))
+    const trx = await Database.transaction()
 
     role.name = ctx.request.input('name')
     role.slug = ctx.request.input('slug')
     role.description = ctx.request.input('description')
 
-    await role.save()
-    await role.related('permissions').sync(ctx.request.input('permissions'))
+    try {
+      await role.useTransaction(trx).save()
+      await role.related('permissions').sync(ctx.request.input('permissions'), undefined, trx)
+      await trx.commit()
+    } catch (error) {
+      await trx.rollback()
+      return ctx.response.internalServerError({
+        message: 'Something went wrong. Please try again.'
+      })
+    }
+
     return ctx.response.noContent()
   }
 
