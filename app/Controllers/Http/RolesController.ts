@@ -3,6 +3,7 @@ import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm';
 import Role from 'App/Models/Role';
 import RoleValidator from 'App/Validators/RoleValidator';
 import Database from '@ioc:Adonis/Lucid/Database'
+import { DateTime } from 'luxon';
 
 export default class RolesController {
   public async index ({ bouncer, request }: HttpContextContract): Promise<ModelPaginatorContract<Role>> {
@@ -81,6 +82,14 @@ export default class RolesController {
     await bouncer.with('RolePolicy').authorize('delete')
     const role = await Role.findByOrFail('slug', params.slug)
     await role.delete()
+    return response.noContent()
+  }
+
+  public async deactivate ({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('RolePolicy').authorize('activate')
+    const role = await Role.findByOrFail('slug', params.slug)
+    role.deactivatedAt = DateTime.now()
+    await role.save()
     return response.noContent()
   }
 }

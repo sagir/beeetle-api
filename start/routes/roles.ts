@@ -7,5 +7,6 @@ Route.group(() => {
   Route.get(':slug', 'RolesController.show').as('show')
   Route.put(':slug', 'RolesController.update').as('update')
   Route.delete(':slug', 'RolesController.destroy').as('destroy')
+  Route.patch(':slug/deactivate', 'RolesController.deactivate').as('deactivate')
 
 }).prefix('api/v1/roles').middleware('auth').as('api.v1.roles')
