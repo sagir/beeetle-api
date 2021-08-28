@@ -2,6 +2,7 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm';
 import Role from 'App/Models/Role';
 import RoleValidator from 'App/Validators/RoleValidator';
+import Database from '@ioc:Adonis/Lucid/Database'
 
 export default class RolesController {
   public async index ({ bouncer, request }: HttpContextContract): Promise<ModelPaginatorContract<Role>> {
@@ -27,13 +28,22 @@ export default class RolesController {
     await bouncer.with('RolePolicy').authorize('create')
     await request.validate(RoleValidator)
     const role = new Role()
+    const trx = await Database.transaction()
 
     role.name = request.input('name')
     role.slug = request.input('slug')
     role.description = request.input('description', undefined)
 
-    await role.save()
-    await role.related('permissions').attach(request.input('permissions'))
+    try {
+      await role.save()
+      await role.related('permissions').attach(request.input('permissions'))
+      await trx.commit()
+    } catch (error) {
+      await trx.rollback()
+      return response.internalServerError({
+        message: 'Something went wrong. Please try again.'
+      })
+    }
 
     return response.created(role)
   }
