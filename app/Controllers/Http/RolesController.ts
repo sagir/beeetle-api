@@ -77,6 +77,10 @@ export default class RolesController {
     return ctx.response.noContent()
   }
 
-  public async destroy ({}: HttpContextContract) {
+  public async destroy ({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('RolePolicy').authorize('delete')
+    const role = await Role.findByOrFail('slug', params.slug)
+    await role.delete()
+    return response.noContent()
   }
 }
