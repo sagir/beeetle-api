@@ -1,7 +1,7 @@
 import BaseSchema from '@ioc:Adonis/Lucid/Schema'
 
 export default class PermissionDependenciesPivots extends BaseSchema {
-  protected tableName = 'permission_dependencies_pivot'
+  protected tableName = 'permission_dependency'
 
   public async up() {
     this.schema.createTable(this.tableName, (table) => {

@@ -17,7 +17,9 @@ export default class AuthController {
       return { token, user }
     }
 
-    return response.badRequest('Invalid credentials.')
+    return response.badRequest({
+      message: 'Invalid credentials.'
+    })
   }
 
   async logout({ auth, response }: HttpContextContract): Promise<void> {
