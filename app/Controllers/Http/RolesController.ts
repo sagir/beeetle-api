@@ -24,7 +24,7 @@ export default class RolesController {
   }
 
   public async store ({ bouncer, request, response }: HttpContextContract): Promise<void> {
-    await bouncer.with('RolePolicy').authorize('view')
+    await bouncer.with('RolePolicy').authorize('create')
     await request.validate(RoleValidator)
     const role = new Role()
 
@@ -38,7 +38,9 @@ export default class RolesController {
     return response.created(role)
   }
 
-  public async show ({}: HttpContextContract) {
+  public async show ({ bouncer, params }: HttpContextContract): Promise<Role> {
+    await bouncer.with('RolePolicy').authorize('view')
+    return await Role.findByOrFail('slug', params.slug)
   }
 
   public async update ({}: HttpContextContract) {
