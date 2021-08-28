@@ -1,6 +1,7 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm';
 import Role from 'App/Models/Role';
+import RoleValidator from 'App/Validators/RoleValidator';
 
 export default class RolesController {
   public async index ({ bouncer, request }: HttpContextContract): Promise<ModelPaginatorContract<Role>> {
@@ -22,16 +23,22 @@ export default class RolesController {
     return await query.paginate(page, perPage)
   }
 
-  public async create ({}: HttpContextContract) {
-  }
+  public async store ({ bouncer, request, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('RolePolicy').authorize('view')
+    await request.validate(RoleValidator)
+    const role = new Role()
 
-  public async store ({}: HttpContextContract) {
+    role.name = request.input('name')
+    role.slug = request.input('slug')
+    role.description = request.input('description', undefined)
+
+    await role.save()
+    await role.related('permissions').attach(request.input('permissions'))
+
+    return response.created(role)
   }
 
   public async show ({}: HttpContextContract) {
-  }
-
-  public async edit ({}: HttpContextContract) {
   }
 
   public async update ({}: HttpContextContract) {
