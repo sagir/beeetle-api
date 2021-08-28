@@ -8,7 +8,7 @@ export const hasPermission = async (
 ): Promise<boolean> => {
   const permission = await Permission.query().where([
     ['model', model],
-    ['action', model]
+    ['action', action]
   ]).whereHas('roles', rolesQuery => {
     rolesQuery.whereHas('users', usersQuery => {
       usersQuery.where('id', user.id)
