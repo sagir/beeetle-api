@@ -18,7 +18,7 @@ export default class Role extends BaseModel {
   public description?: string
 
   @column.dateTime()
-  public deactivatedAt: DateTime
+  public deactivatedAt?: DateTime
 
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime

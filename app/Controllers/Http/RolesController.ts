@@ -92,4 +92,12 @@ export default class RolesController {
     await role.save()
     return response.noContent()
   }
+
+  public async activate ({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('RolePolicy').authorize('activate')
+    const role = await Role.findByOrFail('slug', params.slug)
+    role.deactivatedAt = undefined
+    await role.save()
+    return response.noContent()
+  }
 }
