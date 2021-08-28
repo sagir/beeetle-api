@@ -30,7 +30,7 @@ export default class Role extends BaseModel {
   public permissions: ManyToMany<typeof Permission>
 
   @manyToMany(() => User)
-  public permission: ManyToMany<typeof User>
+  public users: ManyToMany<typeof User>
 
   // scopes
   public static active = scope(active)
