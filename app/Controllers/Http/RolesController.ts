@@ -43,7 +43,18 @@ export default class RolesController {
     return await Role.findByOrFail('slug', params.slug)
   }
 
-  public async update ({}: HttpContextContract) {
+  public async update (ctx: HttpContextContract): Promise<void> {
+    await ctx.bouncer.with('RolePolicy').authorize('update')
+    const role = await Role.findByOrFail('slug', ctx.params.slug)
+    await ctx.request.validate(new RoleValidator(ctx, role.id))
+
+    role.name = ctx.request.input('name')
+    role.slug = ctx.request.input('slug')
+    role.description = ctx.request.input('description')
+
+    await role.save()
+    await role.related('permissions').sync(ctx.request.input('permissions'))
+    return ctx.response.noContent()
   }
 
   public async destroy ({}: HttpContextContract) {
