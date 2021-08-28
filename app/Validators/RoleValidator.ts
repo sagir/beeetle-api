@@ -41,7 +41,12 @@ export default class RoleValidator {
     description: schema.string.optional({ trim: true }, [
       rules.minLength(10),
       rules.maxLength(1000)
-    ])
+    ]),
+    permissions: schema.array([
+      rules.minLength(1)
+    ]).members(schema.number([
+      rules.unsigned()
+    ]))
   })
 
 	/**
