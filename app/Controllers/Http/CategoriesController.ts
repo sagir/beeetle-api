@@ -66,9 +66,20 @@ export default class CategoriesController {
     return ctx.response.noContent()
   }
 
-  public async destroy({}: HttpContextContract) {}
+  public async destroy({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('CategoryPolicy').authorize('delete')
+    const category = await Category.findByOrFail('slug', params.slug)
+    await category.delete()
+    return response.noContent()
+  }
 
-  public async activate({}: HttpContextContract) {}
+  public async activate({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('CategoryPolicy').authorize('activate')
+    const category = await Category.findByOrFail('slug', params.slug)
+    category.deactivateAt = undefined
+    await category.save()
+    return response.noContent()
+  }
 
   public async deactivate({}: HttpContextContract) {}
 }
