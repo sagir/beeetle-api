@@ -7,14 +7,15 @@ export const hasPermission = async (
   action: string
 ): Promise<boolean> => {
   const permission = await Permission.query()
-    .where([
-      ['model', model],
-      ['action', action],
-    ])
-    .whereHas('roles', (rolesQuery) => {
-      rolesQuery.whereHas('users', (usersQuery) => {
-        usersQuery.where('id', user.id)
-      })
+    .where((query) => {
+      query
+        .where('model', model)
+        .andWhere('action', action)
+        .andWhereHas('roles', (rolesQuery) => {
+          rolesQuery.whereHas('users', (usersQuery) => {
+            usersQuery.where('id', user.id)
+          })
+        })
     })
     .first()
 
@@ -30,23 +31,18 @@ export const hasPermissions = async (
   }
 
   const permissionModels = await Permission.query()
-    .where((query) => {
-      query
-        .whereIn(
-          'model',
-          permissions.map(({ model }) => model)
-        )
-        .andWhereIn(
-          'action',
-          permissions.map(({ action }) => action)
-        )
-    })
-    .whereHas('roles', (rolesQuery) => {
-      rolesQuery.whereHas('users', (usersQuery) => {
-        usersQuery.where('id', user.id)
+    .whereHas('roles', (q) => {
+      q.whereHas('users', (q) => {
+        q.where('id', user.id)
       })
     })
-    .exec()
+    .where((q) => {
+      permissions.forEach(({ model, action }) => {
+        q.orWhere((q) => {
+          q.where('model', model).andWhere('action', action)
+        })
+      })
+    })
 
   return permissionModels.length === permissions.length
 }

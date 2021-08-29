@@ -31,11 +31,11 @@ export default class RolePolicy extends BasePolicy {
     return await hasPermissions(user, [
       {
         model: 'role',
-        action: 'view',
+        action: 'read',
       },
       {
         model: 'user',
-        action: 'view',
+        action: 'read',
       },
     ])
   }
