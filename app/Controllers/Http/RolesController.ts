@@ -123,16 +123,12 @@ export default class RolesController {
 
     const page = request.input('page', 1)
     const perPage = request.input('perPage', 10)
-    const active = request.input('activeItems', true)
-    const orderBy = request.input('sortBy', 'name')
+    const orderBy = request.input('orderBy', 'name')
     const orderDirection = request.input('orderDirection', 'asc')
 
-    const query = User.query().whereHas('roles', (query) => query.where('id', role.id))
-
-    if (active !== undefined) {
-      query.withScopes((q) => (active ? q.active() : q.inactive()))
-    }
-
-    return await query.orderBy(orderBy, orderDirection).paginate(page, perPage)
+    return await User.query()
+      .whereHas('roles', (query) => query.where('id', role.id))
+      .orderBy(orderBy, orderDirection)
+      .paginate(page, perPage)
   }
 }
