@@ -38,9 +38,23 @@ export default class StoresController {
     return response.created(store)
   }
 
-  public async show({}: HttpContextContract) {}
+  public async show({ bouncer, params }: HttpContextContract): Promise<Store> {
+    await bouncer.with('StorePolicy').authorize('view')
+    return await Store.findByOrFail('slug', params.slug)
+  }
 
-  public async update({}: HttpContextContract) {}
+  public async update(ctx: HttpContextContract): Promise<void> {
+    await ctx.bouncer.with('StorePolicy').authorize('update')
+    const store = await Store.findByOrFail('slug', ctx.params.slug)
+    await ctx.request.validate(new StoreValidator(ctx, store.id))
+
+    store.name = ctx.request.input('name')
+    store.slug = ctx.request.input('slug')
+    store.address = ctx.request.input('address')
+
+    await store.save()
+    return ctx.response.noContent()
+  }
 
   public async destroy({}: HttpContextContract) {}
 
