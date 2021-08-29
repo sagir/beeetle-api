@@ -65,6 +65,7 @@ export default class UsersController {
     try {
       await user.useTransaction(trx).save()
       await user.related('roles').attach(request.input('roles'), trx)
+      await trx.commit()
     } catch (error) {
       await trx.rollback()
       return response.internalServerError({
@@ -75,9 +76,54 @@ export default class UsersController {
     return response.created(user)
   }
 
-  public async show({}: HttpContextContract) {}
+  public async show({ bouncer, params }: HttpContextContract): Promise<User> {
+    await bouncer.with('UserPolicy').authorize('view')
+    return await User.findOrFail(params.id)
+  }
 
-  public async update({}: HttpContextContract) {}
+  public async update(ctx: HttpContextContract): Promise<void> {
+    await ctx.bouncer.with('UserPolicy').authorize('update')
+    const user = await User.findOrFail(ctx.params.id)
+
+    await ctx.request.validate({
+      schema: schema.create({
+        name: schema.string({ trim: true }, [
+          rules.required(),
+          rules.minLength(3),
+          rules.maxLength(100),
+        ]),
+        email: schema.string({ trim: true }, [
+          rules.required(),
+          rules.email(),
+          rules.unique({
+            table: 'users',
+            column: 'email',
+            whereNot: { id: user.id }
+          }),
+        ]),
+        roles: schema
+          .array([rules.required(), rules.minLength(1)])
+          .members(schema.number([rules.unsigned()])),
+      }),
+    })
+
+    user.name = ctx.request.input('name')
+    user.email = ctx.request.input('email')
+    const trx = await Database.transaction()
+
+    try {
+      await user.useTransaction(trx).save()
+      await user.related('roles').sync(ctx.request.input('roles'), undefined, trx)
+      await trx.commit()
+    } catch (error) {
+      await trx.rollback()
+      return ctx.response.internalServerError({
+        message: 'Something went wrong. Please try again.',
+      })
+    }
+
+    return ctx.response.noContent()
+  }
 
   public async destroy({}: HttpContextContract) {}
 
