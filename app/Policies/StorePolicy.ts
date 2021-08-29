@@ -1,6 +1,5 @@
 import { BasePolicy } from '@ioc:Adonis/Addons/Bouncer'
 import User from 'App/Models/User'
-import Store from 'App/Models/Store'
 import { hasPermission } from 'App/utils/database/permissionHelpers'
 
 export default class StorePolicy extends BasePolicy {
@@ -16,8 +15,7 @@ export default class StorePolicy extends BasePolicy {
     return await hasPermission(user, 'store', 'update')
   }
 
-  public async delete(user: User, store: Store): Promise<boolean> {
-    if (store.default) return false
+  public async delete(user: User): Promise<boolean> {
     return await hasPermission(user, 'store', 'delete')
   }
 
@@ -25,8 +23,7 @@ export default class StorePolicy extends BasePolicy {
     return await hasPermission(user, 'store', 'activate')
   }
 
-  public async deactivate(user: User, store: Store): Promise<boolean> {
-    if (store.default) return false
+  public async deactivate(user: User): Promise<boolean> {
     return await hasPermission(user, 'store', 'deactivate')
   }
 
