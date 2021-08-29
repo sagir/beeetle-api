@@ -2,6 +2,7 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Category from 'App/Models/Category'
 import CategoryValidator from 'App/Validators/CategoryValidator'
+import { DateTime } from 'luxon'
 
 export default class CategoriesController {
   public async index({
@@ -81,5 +82,11 @@ export default class CategoriesController {
     return response.noContent()
   }
 
-  public async deactivate({}: HttpContextContract) {}
+  public async deactivate({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('CategoryPolicy').authorize('activate')
+    const category = await Category.findByOrFail('slug', params.slug)
+    category.deactivateAt = DateTime.now()
+    await category.save()
+    return response.noContent()
+  }
 }
