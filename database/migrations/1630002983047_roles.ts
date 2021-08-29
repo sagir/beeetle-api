@@ -10,8 +10,7 @@ export default class Roles extends BaseSchema {
       table.string('slug', 100).notNullable().unique()
       table.text('description').nullable()
       table.timestamp('deactivated_at').nullable()
-      table.timestamp('created_at').notNullable()
-      table.timestamp('updated_at').nullable()
+      table.timestamps()
     })
   }
 

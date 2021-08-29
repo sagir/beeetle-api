@@ -9,6 +9,9 @@ export default class User extends BaseModel {
   public id: number
 
   @column()
+  public name: string
+
+  @column()
   public email: string
 
   @column({ serializeAs: null })
@@ -18,13 +21,13 @@ export default class User extends BaseModel {
   public rememberMeToken?: string
 
   @column.dateTime()
-  public deactivatedAt: DateTime
+  public deactivatedAt?: DateTime
 
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
-  public updatedAt?: DateTime
+  public updatedAt: DateTime
 
   @beforeSave()
   public static async hashPassword(user: User) {
@@ -33,7 +36,7 @@ export default class User extends BaseModel {
     }
   }
 
-  @manyToMany(() => Role, { pivotTimestamps: true })
+  @manyToMany(() => Role)
   public roles: ManyToMany<typeof Role>
 
   // scopes

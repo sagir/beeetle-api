@@ -18,19 +18,19 @@ export default class Role extends BaseModel {
   public description?: string
 
   @column.dateTime()
-  public deactivatedAt: DateTime
+  public deactivatedAt?: DateTime
 
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
-  public updatedAt?: DateTime
+  public updatedAt: DateTime
 
-  @manyToMany(() => Permission, { pivotTimestamps: true })
+  @manyToMany(() => Permission)
   public permissions: ManyToMany<typeof Permission>
 
-  @manyToMany(() => User, { pivotTimestamps: true })
-  public permission: ManyToMany<typeof User>
+  @manyToMany(() => User)
+  public users: ManyToMany<typeof User>
 
   // scopes
   public static active = scope(active)

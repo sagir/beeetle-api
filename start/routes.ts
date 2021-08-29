@@ -18,3 +18,5 @@
 |
 */
 import './routes/auth'
+import './routes/roles'
+import './routes/users'

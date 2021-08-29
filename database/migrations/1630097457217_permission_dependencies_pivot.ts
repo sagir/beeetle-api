@@ -1,7 +1,7 @@
 import BaseSchema from '@ioc:Adonis/Lucid/Schema'
 
-export default class PermissionRole extends BaseSchema {
-  protected tableName = 'permission_role'
+export default class PermissionDependenciesPivots extends BaseSchema {
+  protected tableName = 'permission_dependency'
 
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
@@ -14,14 +14,15 @@ export default class PermissionRole extends BaseSchema {
         .onDelete('CASCADE')
 
       table
-        .integer('role_id')
+        .integer('depends_on')
         .unsigned()
         .notNullable()
         .references('id')
-        .inTable('roles')
+        .inTable('permissions')
         .onDelete('CASCADE')
 
-      table.unique(['permission_id', 'role_id'])
+      // to prevent duplication
+      table.unique(['permission_id', 'depends_on'])
     })
   }
 
