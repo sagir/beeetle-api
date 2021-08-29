@@ -26,7 +26,7 @@ export default class Permission extends BaseModel {
     localKey: 'id',
     pivotForeignKey: 'permission_id',
     relatedKey: 'id',
-    pivotRelatedForeignKey: 'depends_on'
+    pivotRelatedForeignKey: 'depends_on',
   })
   public dependsOn: ManyToMany<typeof Permission>
 }
