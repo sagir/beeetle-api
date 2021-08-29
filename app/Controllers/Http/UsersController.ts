@@ -125,7 +125,12 @@ export default class UsersController {
     return ctx.response.noContent()
   }
 
-  public async destroy({}: HttpContextContract) {}
+  public async destroy({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('UserPolicy').authorize('delete')
+    const user = await User.findOrFail(params.id)
+    await user.delete()
+    return response.noContent()
+  }
 
   public async activate({}: HttpContextContract) {}
 
