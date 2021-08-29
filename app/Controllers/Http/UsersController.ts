@@ -3,6 +3,7 @@ import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import User from 'App/Models/User'
 import Database from '@ioc:Adonis/Lucid/Database'
 import { schema, rules } from '@ioc:Adonis/Core/Validator'
+import { DateTime } from 'luxon'
 
 export default class UsersController {
   public async index({
@@ -132,7 +133,13 @@ export default class UsersController {
     return response.noContent()
   }
 
-  public async activate({}: HttpContextContract) {}
+  public async activate({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('UserPolicy').authorize('activate')
+    const user = await User.findOrFail(params.id)
+    user.deactivatedAt = DateTime.now()
+    await user.save()
+    return response.noContent()
+  }
 
   public async deactivate({}: HttpContextContract) {}
 
