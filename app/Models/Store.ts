@@ -14,6 +14,9 @@ export default class Store extends BaseModel {
   @column()
   public address: string
 
+  @column()
+  public default: boolean
+
   @column.dateTime()
   public deactivatedAt?: DateTime
 

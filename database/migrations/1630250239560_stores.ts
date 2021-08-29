@@ -9,6 +9,7 @@ export default class Stores extends BaseSchema {
       table.string('name', 100).notNullable()
       table.string('slug', 100).notNullable().unique()
       table.string('address', 255).notNullable()
+      table.boolean('default').defaultTo(false)
       table.timestamp('deactivated_at').nullable()
       table.timestamps()
     })
