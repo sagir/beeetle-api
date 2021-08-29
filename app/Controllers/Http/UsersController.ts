@@ -180,7 +180,8 @@ export default class UsersController {
           usersQuery.where('id', user.id)
         })
       })
-      .orderBy('name', 'asc')
+      .select('id', 'model', 'action')
+      .orderBy('model', 'asc')
       .exec()
   }
 }
