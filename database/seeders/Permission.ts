@@ -45,7 +45,7 @@ export default class PermissionSeeder extends BaseSeeder {
         },
         {
           name: 'menu',
-          dependencies: [{ model: 'admin', permissions: ['read'] }],
+          dependencies: [{ model: 'role', permissions: ['read'] }],
         },
       ],
     },
@@ -59,42 +59,42 @@ export default class PermissionSeeder extends BaseSeeder {
         {
           name: 'create',
           dependencies: [
-            { model: 'admin', permissions: ['read'] },
+            { model: 'user', permissions: ['read'] },
             { model: 'role', permissions: ['read'] },
           ],
         },
         {
           name: 'update',
           dependencies: [
-            { model: 'admin', permissions: ['read'] },
+            { model: 'user', permissions: ['read'] },
             { model: 'role', permissions: ['read'] },
           ],
         },
         {
           name: 'delete',
           dependencies: [
-            { model: 'admin', permissions: ['read'] },
+            { model: 'user', permissions: ['read'] },
             { model: 'role', permissions: ['read'] },
           ],
         },
         {
           name: 'activate',
           dependencies: [
-            { model: 'admin', permissions: ['read'] },
+            { model: 'user', permissions: ['read'] },
             { model: 'role', permissions: ['read'] },
           ],
         },
         {
           name: 'deactivate',
           dependencies: [
-            { model: 'admin', permissions: ['read'] },
+            { model: 'user', permissions: ['read'] },
             { model: 'role', permissions: ['read'] },
           ],
         },
         {
           name: 'menu',
           dependencies: [
-            { model: 'admin', permissions: ['read'] },
+            { model: 'user', permissions: ['read'] },
             { model: 'role', permissions: ['read'] },
           ],
         },
@@ -104,23 +104,34 @@ export default class PermissionSeeder extends BaseSeeder {
       model: 'store',
       actions: [
         { name: 'read' },
-        { name: 'create' },
-        { name: 'update' },
-        { name: 'delete' },
-        { name: 'makeDefault' },
-        { name: 'activate' },
-        { name: 'deactivate' },
+        { name: 'create', dependencies: [{ model: 'store', permissions: ['read'] }] },
+        { name: 'update', dependencies: [{ model: 'store', permissions: ['read'] }] },
+        { name: 'delete', dependencies: [{ model: 'store', permissions: ['read'] }] },
+        { name: 'makeDefault', dependencies: [{ model: 'store', permissions: ['read'] }] },
+        { name: 'activate', dependencies: [{ model: 'store', permissions: ['read'] }] },
+        { name: 'deactivate', dependencies: [{ model: 'store', permissions: ['read'] }] },
       ],
     },
     {
       model: 'category',
       actions: [
         { name: 'read' },
-        { name: 'create' },
-        { name: 'update' },
-        { name: 'delete' },
-        { name: 'activate' },
-        { name: 'deactivate' },
+        { name: 'create', dependencies: [{ model: 'category', permissions: ['read'] }] },
+        { name: 'update', dependencies: [{ model: 'category', permissions: ['read'] }] },
+        { name: 'delete', dependencies: [{ model: 'category', permissions: ['read'] }] },
+        { name: 'activate', dependencies: [{ model: 'category', permissions: ['read'] }] },
+        { name: 'deactivate', dependencies: [{ model: 'category', permissions: ['read'] }] },
+      ],
+    },
+    {
+      model: 'supplier',
+      actions: [
+        { name: 'read' },
+        { name: 'create', dependencies: [{ model: 'supplier', permissions: ['read'] }] },
+        { name: 'update', dependencies: [{ model: 'supplier', permissions: ['read'] }] },
+        { name: 'delete', dependencies: [{ model: 'supplier', permissions: ['read'] }] },
+        { name: 'activate', dependencies: [{ model: 'supplier', permissions: ['read'] }] },
+        { name: 'deactivate', dependencies: [{ model: 'supplier', permissions: ['read'] }] },
       ],
     },
   ]
