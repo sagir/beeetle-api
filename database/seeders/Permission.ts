@@ -100,6 +100,18 @@ export default class PermissionSeeder extends BaseSeeder {
         },
       ],
     },
+    {
+      model: 'store',
+      actions: [
+        { name: 'read' },
+        { name: 'create' },
+        { name: 'update' },
+        { name: 'delete' },
+        { name: 'makeDefault' },
+        { name: 'activate' },
+        { name: 'deactivate' },
+      ],
+    },
   ]
 
   public async run() {
