@@ -1,6 +1,7 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Category from 'App/Models/Category'
+import CategoryValidator from 'App/Validators/CategoryValidator'
 
 export default class CategoriesController {
   public async index({
@@ -15,7 +16,7 @@ export default class CategoriesController {
     const orderBy = request.input('orderBy', 'name')
     const orderDirection = request.input('orderDirection', 'asc')
 
-    const query = Category.query()
+    const query = Category.query().whereNull('parent_id').preload('children')
 
     if (active !== undefined) {
       query.withScopes((q) => (active ? q.active() : q.inactive()))
@@ -24,7 +25,19 @@ export default class CategoriesController {
     return await query.orderBy(orderBy, orderDirection).paginate(page, perPage)
   }
 
-  public async store({}: HttpContextContract) {}
+  public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('CategoryPolicy').authorize('create')
+    await request.validate(CategoryValidator)
+    const category = new Category()
+
+    category.name = request.input('name')
+    category.slug = request.input('slug')
+    category.description = request.input('description')
+    category.parent_id = request.input('parent_id')
+
+    await category.save()
+    return response.created(category)
+  }
 
   public async show({}: HttpContextContract) {}
 
