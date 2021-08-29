@@ -8,6 +8,7 @@ Route.group(() => {
   Route.delete(':slug', 'StoresController.destroy').as('destroy')
   Route.patch(':slug/activate', 'StoresController.activate').as('activate')
   Route.patch(':slug/deactivate', 'StoresController.deactivate').as('deactivate')
+  Route.patch(':slug/make-default', 'StoresControler.makeDefault').as('makeDefault')
 })
   .prefix('api/v1/stores')
   .middleware('auth')

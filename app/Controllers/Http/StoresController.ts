@@ -3,6 +3,7 @@ import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Store from 'App/Models/Store'
 import StoreValidator from 'App/Validators/StoreValidator'
 import { DateTime } from 'luxon'
+import Database from '@ioc:Adonis/Lucid/Database'
 
 export default class StoresController {
   public async index({
@@ -91,6 +92,33 @@ export default class StoresController {
 
     store.deactivatedAt = DateTime.now()
     await store.save()
+    return response.noContent()
+  }
+
+  public async makeDefault({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('StorePolicy').authorize('makeDefault')
+    const store = await Store.findByOrFail('slug', params.slug)
+    store.default = true
+    const trx = await Database.transaction()
+
+    try {
+      await store.useTransaction(trx).save()
+
+      await Store.query()
+        .where((query) => {
+          query.whereNot('id', store.id).andWhere('default', true)
+        })
+        .useTransaction(trx)
+        .update({ default: false })
+
+      await trx.commit()
+    } catch (error) {
+      await trx.rollback()
+      return response.internalServerError({
+        message: 'Something went wrong. Please try again.',
+      })
+    }
+
     return response.noContent()
   }
 }
