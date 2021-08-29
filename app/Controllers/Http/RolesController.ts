@@ -4,6 +4,7 @@ import Role from 'App/Models/Role';
 import RoleValidator from 'App/Validators/RoleValidator';
 import Database from '@ioc:Adonis/Lucid/Database'
 import { DateTime } from 'luxon';
+import Permission from 'App/Models/Permission';
 
 export default class RolesController {
   public async index ({ bouncer, request }: HttpContextContract): Promise<ModelPaginatorContract<Role>> {
@@ -99,5 +100,12 @@ export default class RolesController {
     role.deactivatedAt = undefined
     await role.save()
     return response.noContent()
+  }
+
+  public async permissions({ bouncer, params }: HttpContextContract): Promise<Permission[]> {
+    await bouncer.with('RolePolicy').authorize('view')
+    const role = await Role.findByOrFail('slug', params.slug)
+    await role.load('permissions')
+    return role.permissions
   }
 }
