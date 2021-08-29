@@ -4,6 +4,7 @@ import User from 'App/Models/User'
 import Database from '@ioc:Adonis/Lucid/Database'
 import { schema, rules } from '@ioc:Adonis/Core/Validator'
 import { DateTime } from 'luxon'
+import Role from 'App/Models/Role'
 
 export default class UsersController {
   public async index({
@@ -99,7 +100,7 @@ export default class UsersController {
           rules.unique({
             table: 'users',
             column: 'email',
-            whereNot: { id: user.id }
+            whereNot: { id: user.id },
           }),
         ]),
         roles: schema
@@ -141,9 +142,32 @@ export default class UsersController {
     return response.noContent()
   }
 
-  public async deactivate({}: HttpContextContract) {}
+  public async deactivate({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('UserPolicy').authorize('deactivate')
+    const user = await User.findOrFail(params.id)
+    user.deactivatedAt = DateTime.now()
+    await user.save()
+    return response.noContent()
+  }
 
-  public async roles({}: HttpContextContract) {}
+  public async roles({
+    bouncer,
+    params,
+    request,
+  }: HttpContextContract): Promise<ModelPaginatorContract<Role>> {
+    await bouncer.with('UserPolicy').authorize('viewRoles')
+    const user = await User.findOrFail(params.id)
+
+    const page = request.input('page', 1)
+    const perPage = request.input('perPage', 10)
+    const orderBy = request.input('orderBy', 'name')
+    const orderDirection = request.input('orderDirection', 'asc')
+
+    return await Role.query()
+      .whereHas('users', (query) => query.where('id', user.id))
+      .orderBy(orderBy, orderDirection)
+      .paginate(page, perPage)
+  }
 
   public async permissions({}: HttpContextContract) {}
 }
