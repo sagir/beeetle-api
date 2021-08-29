@@ -1,6 +1,7 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Supplier from 'App/Models/Supplier'
+import { schema, rules } from '@ioc:Adonis/Core/Validator'
 
 export default class SuppliersController {
   public async index({
@@ -24,7 +25,53 @@ export default class SuppliersController {
     return await query.paginate(page, perPage)
   }
 
-  public async store({}: HttpContextContract) {}
+  public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('SupplierPolicy').authorize('create')
+
+    await request.validate({
+      schema: schema.create({
+        name: schema.string({ trim: true }, [
+          rules.required(),
+          rules.minLength(3),
+          rules.maxLength(100),
+        ]),
+        email: schema.string({ trim: true }, [
+          rules.required(),
+          rules.email(),
+          rules.unique({
+            table: 'suppliers',
+            column: 'email',
+          }),
+        ]),
+        phone: schema.string({ trim: true }, [
+          rules.required(),
+          rules.minLength(7),
+          rules.maxLength(15),
+          rules.unique({
+            table: 'suppliers',
+            column: 'phone',
+          }),
+        ]),
+        password: schema.string({ trim: true }, [
+          rules.required(),
+          rules.minLength(6),
+          rules.maxLength(16),
+        ]),
+        address: schema.string.optional({ trim: true }, [rules.minLength(3), rules.maxLength(255)]),
+      }),
+    })
+
+    const supplier = new Supplier()
+
+    supplier.name = request.input('name')
+    supplier.email = request.input('email')
+    supplier.phone = request.input('phone')
+    supplier.password = request.input('password')
+    supplier.address = request.input('address')
+
+    await supplier.save()
+    return response.created(supplier)
+  }
 
   public async show({}: HttpContextContract) {}
 
