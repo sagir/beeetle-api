@@ -52,7 +52,19 @@ export default class CategoriesController {
     return category
   }
 
-  public async update({}: HttpContextContract) {}
+  public async update(ctx: HttpContextContract): Promise<void> {
+    await ctx.bouncer.with('CategoryPolicy').authorize('update')
+    const category = await Category.findByOrFail('slug', ctx.params.slug)
+    await ctx.request.validate(new CategoryValidator(ctx, category.id))
+
+    category.name = ctx.request.input('name')
+    category.slug = ctx.request.input('slug')
+    category.description = ctx.request.input('description')
+    category.parent_id = ctx.request.input('parent_id')
+
+    await category.save()
+    return ctx.response.noContent()
+  }
 
   public async destroy({}: HttpContextContract) {}
 
