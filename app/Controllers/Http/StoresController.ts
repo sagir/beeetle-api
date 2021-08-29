@@ -56,7 +56,12 @@ export default class StoresController {
     return ctx.response.noContent()
   }
 
-  public async destroy({}: HttpContextContract) {}
+  public async destroy({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    const store = await Store.findByOrFail('slug', params.slug)
+    await bouncer.with('StorePolicy').authorize('delete', store)
+    await store.delete()
+    return response.noContent()
+  }
 
   public async activate({}: HttpContextContract) {}
 
