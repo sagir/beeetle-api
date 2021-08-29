@@ -107,6 +107,7 @@ export default class PermissionSeeder extends BaseSeeder {
         { name: 'create' },
         { name: 'update' },
         { name: 'delete' },
+        { name: 'makeDefault' },
         { name: 'activate' },
         { name: 'deactivate' },
       ],
