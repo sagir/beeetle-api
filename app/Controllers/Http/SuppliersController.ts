@@ -73,7 +73,10 @@ export default class SuppliersController {
     return response.created(supplier)
   }
 
-  public async show({}: HttpContextContract) {}
+  public async show({ bouncer, params }: HttpContextContract): Promise<Supplier> {
+    await bouncer.with('SupplierPolicy').authorize('view')
+    return await Supplier.findOrFail(params.id)
+  }
 
   public async update({}: HttpContextContract) {}
 
