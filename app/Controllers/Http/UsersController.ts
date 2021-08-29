@@ -5,6 +5,7 @@ import Database from '@ioc:Adonis/Lucid/Database'
 import { schema, rules } from '@ioc:Adonis/Core/Validator'
 import { DateTime } from 'luxon'
 import Role from 'App/Models/Role'
+import Permission from 'App/Models/Permission'
 
 export default class UsersController {
   public async index({
@@ -169,5 +170,17 @@ export default class UsersController {
       .paginate(page, perPage)
   }
 
-  public async permissions({}: HttpContextContract) {}
+  public async permissions({ bouncer, params }: HttpContextContract): Promise<Permission[]> {
+    await bouncer.with('UserPolicy').authorize('viewRoles')
+    const user = await User.findOrFail(params.id)
+
+    return await Permission.query()
+      .whereHas('roles', (rolesQuery) => {
+        rolesQuery.whereHas('users', (usersQuery) => {
+          usersQuery.where('id', user.id)
+        })
+      })
+      .orderBy('name', 'asc')
+      .exec()
+  }
 }
