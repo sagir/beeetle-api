@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column } from '@ioc:Adonis/Lucid/Orm'
+import { BaseModel, column, scope } from '@ioc:Adonis/Lucid/Orm'
+import { active, inactive } from 'App/utils/database/scopes'
 
 export default class Store extends BaseModel {
   @column({ isPrimary: true })
@@ -25,4 +26,8 @@ export default class Store extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   public updatedAt: DateTime
+
+  // scopes
+  public static active = scope(active)
+  public static inactive = scope(inactive)
 }
