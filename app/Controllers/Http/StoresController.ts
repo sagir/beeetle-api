@@ -2,6 +2,7 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Store from 'App/Models/Store'
 import StoreValidator from 'App/Validators/StoreValidator'
+import { DateTime } from 'luxon'
 
 export default class StoresController {
   public async index({
@@ -57,8 +58,15 @@ export default class StoresController {
   }
 
   public async destroy({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('StorePolicy').authorize('delete')
     const store = await Store.findByOrFail('slug', params.slug)
-    await bouncer.with('StorePolicy').authorize('delete', store)
+
+    if (store.default) {
+      return response.badRequest({
+        message: "Can't delete default store.",
+      })
+    }
+
     await store.delete()
     return response.noContent()
   }
@@ -71,5 +79,18 @@ export default class StoresController {
     return response.noContent()
   }
 
-  public async deactivate({}: HttpContextContract) {}
+  public async deactivate({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('StorePolicy').authorize('deactivate')
+    const store = await Store.findByOrFail('slug', params.slug)
+
+    if (store.default) {
+      return response.badRequest({
+        message: "Can't deactivate default store.",
+      })
+    }
+
+    store.deactivatedAt = DateTime.now()
+    await store.save()
+    return response.noContent()
+  }
 }
