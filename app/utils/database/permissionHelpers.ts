@@ -18,7 +18,7 @@ export const hasPermission = async (
   return !!permission
 }
 
-export const hasPermisions = async (
+export const hasPermissions = async (
   user: User,
   permissions: { model: string; action: string }[]
 ): Promise<boolean> => {

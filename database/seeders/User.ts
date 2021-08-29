@@ -3,7 +3,7 @@ import User from 'App/Models/User'
 import Role from 'App/Models/Role'
 
 export default class UserSeeder extends BaseSeeder {
-  public async run () {
+  public async run() {
     const superAdmin = new User()
     superAdmin.name = 'Sagir Hossain'
     superAdmin.email = 'sagir@admin.com'
