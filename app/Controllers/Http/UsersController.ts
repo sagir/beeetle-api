@@ -17,5 +17,5 @@ export default class UsersController {
 
   public async roles({}: HttpContextContract) {}
 
-  public async routes({}: HttpContextContract) {}
+  public async permissions({}: HttpContextContract) {}
 }
