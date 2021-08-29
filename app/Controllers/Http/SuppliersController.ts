@@ -119,7 +119,12 @@ export default class SuppliersController {
     return response.noContent()
   }
 
-  public async destroy({}: HttpContextContract) {}
+  public async destroy({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('SupplierPolicy').authorize('delete')
+    const supplier = await Supplier.findOrFail(params.id)
+    await supplier.delete()
+    return response.noContent()
+  }
 
   public async activate({}: HttpContextContract) {}
 
