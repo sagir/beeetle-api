@@ -63,7 +63,13 @@ export default class StoresController {
     return response.noContent()
   }
 
-  public async activate({}: HttpContextContract) {}
+  public async activate({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('StorePolicy').authorize('activate')
+    const store = await Store.findByOrFail('slug', params.slug)
+    store.deactivatedAt = undefined
+    await store.save()
+    return response.noContent()
+  }
 
   public async deactivate({}: HttpContextContract) {}
 }
