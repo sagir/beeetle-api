@@ -13,8 +13,8 @@ export default class UserSeeder extends BaseSeeder {
     const manager = new User()
     manager.name = 'John Doe'
     manager.email = 'john@admin.com'
-    superAdmin.password = '123456'
-    await superAdmin.save()
+    manager.password = '123456'
+    await manager.save()
 
     const superAdminRole = await Role.findByOrFail('slug', 'super-admin')
     const managerAdminRole = await Role.findByOrFail('slug', 'manager')
