@@ -78,7 +78,46 @@ export default class SuppliersController {
     return await Supplier.findOrFail(params.id)
   }
 
-  public async update({}: HttpContextContract) {}
+  public async update({ bouncer, params, request, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('SupplierPolicy').authorize('update')
+    const supplier = await Supplier.findOrFail(params.id)
+
+    await request.validate({
+      schema: schema.create({
+        name: schema.string({ trim: true }, [
+          rules.required(),
+          rules.minLength(3),
+          rules.maxLength(100),
+        ]),
+        email: schema.string({ trim: true }, [
+          rules.required(),
+          rules.email(),
+          rules.unique({
+            table: 'suppliers',
+            column: 'email',
+          }),
+        ]),
+        phone: schema.string({ trim: true }, [
+          rules.required(),
+          rules.minLength(7),
+          rules.maxLength(15),
+          rules.unique({
+            table: 'suppliers',
+            column: 'phone',
+          }),
+        ]),
+        address: schema.string.optional({ trim: true }, [rules.minLength(3), rules.maxLength(255)]),
+      }),
+    })
+
+    supplier.name = request.input('name')
+    supplier.email = request.input('email')
+    supplier.phone = request.input('phone')
+    supplier.address = request.input('address')
+
+    await supplier.save()
+    return response.noContent()
+  }
 
   public async destroy({}: HttpContextContract) {}
 
