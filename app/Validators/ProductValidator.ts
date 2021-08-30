@@ -59,6 +59,9 @@ export default class ProductValidator {
         rules.allExists({
           table: 'categories',
           column: 'id',
+          where(query) {
+            query.whereNotNull('parent_id')
+          },
         }),
       ])
       .members(schema.number([rules.unsigned()])),
