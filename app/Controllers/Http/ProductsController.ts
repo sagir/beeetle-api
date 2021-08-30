@@ -42,6 +42,7 @@ export default class ProductsController {
     product.slug = request.input('slug')
     product.code = request.input('code')
     product.description = request.input('description')
+    product.deactivatedAt = DateTime.now()
 
     await product.save()
     return response.created(product)
