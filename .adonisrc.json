@@ -26,6 +26,12 @@
         "repl",
         "web"
       ]
+    },
+    {
+      "file": "./start/validator/allExists",
+      "environment": [
+        "web"
+      ]
     }
   ],
   "providers": [

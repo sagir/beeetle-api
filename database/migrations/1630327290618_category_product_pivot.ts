@@ -1,10 +1,18 @@
 import BaseSchema from '@ioc:Adonis/Lucid/Schema'
 
-export default class ProductSpecificationPivot extends BaseSchema {
-  protected tableName = 'product_specification'
+export default class CategoryProductPivot extends BaseSchema {
+  protected tableName = 'category_product'
 
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
+      table
+        .integer('category_id')
+        .unsigned()
+        .notNullable()
+        .references('id')
+        .inTable('categories')
+        .onDelete('CASCADE')
+
       table
         .integer('product_id')
         .unsigned()
@@ -13,20 +21,8 @@ export default class ProductSpecificationPivot extends BaseSchema {
         .inTable('products')
         .onDelete('CASCADE')
 
-      table
-        .integer('specification_id')
-        .unsigned()
-        .notNullable()
-        .references('id')
-        .inTable('specifications')
-        .onDelete('CASCADE')
-
       // preventing duplicates
-      table.unique(['product_id', 'specification_id'])
-
-      // pivot extra columns
-      table.text('value').notNullable()
-      table.boolean('visible').notNullable().defaultTo(true)
+      table.unique(['category_id', 'product_id'])
     })
   }
 
