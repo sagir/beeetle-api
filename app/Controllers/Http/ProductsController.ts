@@ -77,6 +77,28 @@ export default class ProductsController {
   public async activate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('ProductPolicy').authorize('activate')
     const product = await Product.findByOrFail('slug', params.slug)
+
+    const [categories] = await product
+      .related('categories')
+      .query()
+      .whereNull('parent_id')
+      .withScopes((q) => q.active())
+      .count('id', 'total')
+
+    const [specifications] = await product
+      .related('specifications')
+      .query()
+      .withScopes((q) => q.active())
+      .wherePivot('visible', true)
+      .count('id', 'total')
+
+    // @ts-ignore
+    if (!categories.total || !specifications.total) {
+      return response.badRequest({
+        message: 'Product required at-least 1 category and 1 specification.',
+      })
+    }
+
     product.deactivatedAt = undefined
     await product.save()
     return response.noContent()
