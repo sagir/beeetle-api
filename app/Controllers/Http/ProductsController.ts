@@ -1,5 +1,4 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import Database from '@ioc:Adonis/Lucid/Database'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Product from 'App/Models/Product'
 import ProductValidator from 'App/Validators/ProductValidator'
@@ -38,43 +37,14 @@ export default class ProductsController {
     await bouncer.with('ProductPolicy').authorize('create')
     await request.validate(ProductValidator)
     const product = new Product()
-    const trx = await Database.transaction()
 
     product.name = request.input('name')
     product.slug = request.input('slug')
     product.code = request.input('code')
     product.description = request.input('description')
 
-    try {
-      await product.useTransaction(trx).save()
-      await product.related('categories').attach(request.input('categories'), trx)
-
-      await product
-        .related('specifications')
-        .attach(this.getSpecificationData(request.input('specifications')), trx)
-
-      await trx.commit()
-    } catch (error) {
-      trx.rollback()
-      return response.internalServerError({
-        message: 'Something went wrong. Please try again.',
-      })
-    }
-
+    await product.save()
     return response.created(product)
-  }
-
-  private getSpecificationData(specifications: any[]): any[] {
-    return specifications.map((specification) => {
-      let obj = {}
-
-      obj[specification.id] = {
-        value: specification.value,
-        visible: specification.visible,
-      }
-
-      return obj
-    })
   }
 
   public async show({ bouncer, params }: HttpContextContract): Promise<Product> {
@@ -86,29 +56,13 @@ export default class ProductsController {
     await ctx.bouncer.with('ProductPolicy').authorize('update')
     const product = await Product.findByOrFail('slug', ctx.params.slug)
     await ctx.request.validate(new ProductValidator(ctx, product.id))
-    const trx = await Database.transaction()
 
     product.name = ctx.request.input('name')
     product.slug = ctx.request.input('slug')
     product.code = ctx.request.input('code')
     product.description = ctx.request.input('description')
 
-    try {
-      await product.useTransaction(trx).save()
-      await product.related('categories').sync(ctx.request.input('permissions'), undefined, trx)
-
-      await product
-        .related('specifications')
-        .sync(this.getSpecificationData(ctx.request.input('specifications')), undefined, trx)
-
-      await trx.commit()
-    } catch (error) {
-      await trx.rollback()
-      return ctx.response.internalServerError({
-        message: 'Something went wrong. Please try again.',
-      })
-    }
-
+    await product.save()
     return ctx.response.noContent()
   }
 
