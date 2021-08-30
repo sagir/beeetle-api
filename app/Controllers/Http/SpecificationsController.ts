@@ -2,6 +2,7 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Specification from 'App/Models/Specification'
 import SpecifactionValidator from 'App/Validators/SpecifactionValidator'
+import { DateTime } from 'luxon'
 
 export default class SpecificationsController {
   public async index({
@@ -42,11 +43,38 @@ export default class SpecificationsController {
     return await Specification.findOrFail(params.id)
   }
 
-  public async update({}: HttpContextContract) {}
+  public async update(ctx: HttpContextContract): Promise<void> {
+    await ctx.bouncer.with('SpecificationPolicy').authorize('update')
+    const specification = await Specification.findOrFail(ctx.params.id)
+    await ctx.request.validate(new SpecifactionValidator(ctx, specification.id))
 
-  public async destroy({}: HttpContextContract) {}
+    specification.name = ctx.request.input('name')
+    specification.description = ctx.request.input('description')
 
-  public async activate({}: HttpContextContract) {}
+    await specification.save()
+    return ctx.response.noContent()
+  }
 
-  public async deactivate({}: HttpContextContract) {}
+  public async destroy({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('SpecificationPolicy').authorize('delete')
+    const specification = await Specification.findOrFail(params.id)
+    await specification.delete()
+    return response.noContent()
+  }
+
+  public async activate({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('SpecificationPolicy').authorize('activate')
+    const specification = await Specification.findOrFail(params.id)
+    specification.deactivatedAt = undefined
+    await specification.save()
+    return response.noContent()
+  }
+
+  public async deactivate({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('SpecificationPolicy').authorize('activate')
+    const specification = await Specification.findOrFail(params.id)
+    specification.deactivatedAt = DateTime.now()
+    await specification.save()
+    return response.noContent()
+  }
 }
