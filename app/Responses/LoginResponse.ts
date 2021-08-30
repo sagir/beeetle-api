@@ -1,7 +1,9 @@
-import { OpaqueTokenContract } from "@ioc:Adonis/Addons/Auth";
-import User from "App/Models/User";
+import { OpaqueTokenContract } from '@ioc:Adonis/Addons/Auth'
+import User from 'App/Models/User'
 
-export default interface {
-  token: OpaqueTokenContract<User>,
+interface LoginResponse {
+  token: OpaqueTokenContract<User>
   user: User
 }
+
+export default LoginResponse

@@ -26,7 +26,7 @@ export default class Category extends BaseModel {
   @column()
   public description: string
 
-  @column()
+  @column({ serializeAs: null })
   public parent_id?: number | null
 
   @column.dateTime()
