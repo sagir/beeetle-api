@@ -1,5 +1,6 @@
 import { schema, rules } from '@ioc:Adonis/Core/Validator'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+import { DateTime } from 'luxon'
 
 export default class ProductValidator {
   constructor(protected ctx: HttpContextContract, private productId: number = 0) {}
@@ -61,7 +62,9 @@ export default class ProductValidator {
           table: 'categories',
           column: 'id',
           where(query) {
-            query.whereNotNull('parent_id')
+            query.whereNotNull('parent_id').andWhere((q) => {
+              q.whereNull('deactivated_at').orWhere('deactivate_at', '>', DateTime.now().toSQL())
+            })
           },
         }),
       ])
@@ -74,6 +77,9 @@ export default class ProductValidator {
           table: 'specifications',
           column: 'id',
           field: 'id',
+          where(query) {
+            query.whereNull('deactivated_at').orWhere('deactivate_at', '>', DateTime.now().toSQL())
+          },
         }),
       ])
       .members(
