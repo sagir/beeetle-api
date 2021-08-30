@@ -1,6 +1,5 @@
 import { schema, rules } from '@ioc:Adonis/Core/Validator'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import { DateTime } from 'luxon'
 
 export default class ProductValidator {
   constructor(protected ctx: HttpContextContract, private productId: number = 0) {}
@@ -54,41 +53,6 @@ export default class ProductValidator {
       rules.minLength(10),
       rules.maxLength(1000),
     ]),
-    categories: schema
-      .array([
-        rules.distinct('*'),
-        rules.minLength(1),
-        rules.allExists({
-          table: 'categories',
-          column: 'id',
-          where(query) {
-            query.whereNotNull('parent_id').andWhere((q) => {
-              q.whereNull('deactivated_at').orWhere('deactivate_at', '>', DateTime.now().toSQL())
-            })
-          },
-        }),
-      ])
-      .members(schema.number([rules.unsigned()])),
-    specifications: schema
-      .array([
-        rules.distinct('id'),
-        rules.minLength(1),
-        rules.allExists({
-          table: 'specifications',
-          column: 'id',
-          field: 'id',
-          where(query) {
-            query.whereNull('deactivated_at').orWhere('deactivate_at', '>', DateTime.now().toSQL())
-          },
-        }),
-      ])
-      .members(
-        schema.object().members({
-          id: schema.number([rules.required(), rules.unsigned()]),
-          value: schema.string({ trim: true }, [rules.required(), rules.maxLength(1000)]),
-          visible: schema.boolean([rules.required]),
-        })
-      ),
   })
 
   /**
