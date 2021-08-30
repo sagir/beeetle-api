@@ -134,6 +134,75 @@ export default class PermissionSeeder extends BaseSeeder {
         { name: 'deactivate', dependencies: [{ model: 'supplier', permissions: ['read'] }] },
       ],
     },
+    {
+      model: 'specification',
+      actions: [
+        { name: 'read' },
+        { name: 'create', dependencies: [{ model: 'specification', permissions: ['read'] }] },
+        { name: 'update', dependencies: [{ model: 'specification', permissions: ['read'] }] },
+        { name: 'delete', dependencies: [{ model: 'specification', permissions: ['read'] }] },
+        { name: 'activate', dependencies: [{ model: 'specification', permissions: ['read'] }] },
+        { name: 'deactivate', dependencies: [{ model: 'specification', permissions: ['read'] }] },
+      ],
+    },
+    {
+      model: 'product',
+      actions: [
+        {
+          name: 'read',
+          dependencies: [
+            { model: 'category', permissions: ['read'] },
+            { model: 'supplier', permissions: ['read'] },
+            { model: 'specification', permissions: ['read'] },
+          ],
+        },
+        {
+          name: 'create',
+          dependencies: [
+            { model: 'product', permissions: ['read'] },
+            { model: 'category', permissions: ['read'] },
+            { model: 'supplier', permissions: ['read'] },
+            { model: 'specification', permissions: ['read'] },
+          ],
+        },
+        {
+          name: 'update',
+          dependencies: [
+            { model: 'product', permissions: ['read'] },
+            { model: 'category', permissions: ['read'] },
+            { model: 'supplier', permissions: ['read'] },
+            { model: 'specification', permissions: ['read'] },
+          ],
+        },
+        {
+          name: 'delete',
+          dependencies: [
+            { model: 'product', permissions: ['read'] },
+            { model: 'category', permissions: ['read'] },
+            { model: 'supplier', permissions: ['read'] },
+            { model: 'specification', permissions: ['read'] },
+          ],
+        },
+        {
+          name: 'activate',
+          dependencies: [
+            { model: 'product', permissions: ['read'] },
+            { model: 'category', permissions: ['read'] },
+            { model: 'supplier', permissions: ['read'] },
+            { model: 'specification', permissions: ['read'] },
+          ],
+        },
+        {
+          name: 'deactivate',
+          dependencies: [
+            { model: 'product', permissions: ['read'] },
+            { model: 'category', permissions: ['read'] },
+            { model: 'supplier', permissions: ['read'] },
+            { model: 'specification', permissions: ['read'] },
+          ],
+        },
+      ],
+    },
   ]
 
   public async run() {
