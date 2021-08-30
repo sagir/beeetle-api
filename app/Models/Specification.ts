@@ -1,8 +1,9 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, scope } from '@ioc:Adonis/Lucid/Orm'
+import { BaseModel, column, ManyToMany, manyToMany, scope } from '@ioc:Adonis/Lucid/Orm'
 import { active, inactive } from 'App/utils/database/scopes'
+import Product from './Product'
 
-export default class ProductSpecification extends BaseModel {
+export default class Specification extends BaseModel {
   @column({ isPrimary: true })
   public id: number
 
@@ -20,6 +21,11 @@ export default class ProductSpecification extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   public updatedAt: DateTime
+
+  @manyToMany(() => Product, {
+    pivotColumns: ['value', 'visible'],
+  })
+  public products: ManyToMany<typeof Product>
 
   // scopes
   public static active = scope(active)

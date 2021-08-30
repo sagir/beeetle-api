@@ -1,7 +1,16 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, HasMany, hasMany, scope } from '@ioc:Adonis/Lucid/Orm'
+import {
+  BaseModel,
+  column,
+  HasMany,
+  hasMany,
+  ManyToMany,
+  manyToMany,
+  scope,
+} from '@ioc:Adonis/Lucid/Orm'
 import { active, inactive } from 'App/utils/database/scopes'
 import ProductImage from './ProductImage'
+import Specification from './Specification'
 
 export default class Product extends BaseModel {
   @column({ isPrimary: true })
@@ -30,6 +39,11 @@ export default class Product extends BaseModel {
 
   @hasMany(() => ProductImage)
   public images: HasMany<typeof ProductImage>
+
+  @manyToMany(() => Specification, {
+    pivotColumns: ['value', 'visible'],
+  })
+  public specifications: ManyToMany<typeof Specification>
 
   // scopes
   public static active = scope(active)
