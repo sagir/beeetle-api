@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, scope } from '@ioc:Adonis/Lucid/Orm'
+import { BaseModel, column, HasMany, hasMany, scope } from '@ioc:Adonis/Lucid/Orm'
 import { active, inactive } from 'App/utils/database/scopes'
+import ProductImage from './ProductImage'
 
 export default class Product extends BaseModel {
   @column({ isPrimary: true })
@@ -26,6 +27,9 @@ export default class Product extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   public updatedAt: DateTime
+
+  @hasMany(() => ProductImage)
+  public images: HasMany<typeof ProductImage>
 
   // scopes
   public static active = scope(active)

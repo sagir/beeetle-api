@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, scope } from '@ioc:Adonis/Lucid/Orm'
+import { BaseModel, BelongsTo, belongsTo, column, scope } from '@ioc:Adonis/Lucid/Orm'
 import { active, inactive } from 'App/utils/database/scopes'
+import Product from './Product'
 
 export default class ProductImage extends BaseModel {
   @column({ isPrimary: true })
@@ -26,6 +27,9 @@ export default class ProductImage extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   public updatedAt: DateTime
+
+  @belongsTo(() => Product)
+  public product: BelongsTo<typeof Product>
 
   // scopes
   public static active = scope(active)
