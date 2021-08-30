@@ -3,6 +3,7 @@ import Database from '@ioc:Adonis/Lucid/Database'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Product from 'App/Models/Product'
 import ProductValidator from 'App/Validators/ProductValidator'
+import { DateTime } from 'luxon'
 
 export default class ProductsController {
   public async index({
@@ -118,7 +119,19 @@ export default class ProductsController {
     return response.noContent()
   }
 
-  public async activate({}: HttpContextContract) {}
+  public async activate({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('ProductPolicy').authorize('activate')
+    const product = await Product.findByOrFail('slug', params.slug)
+    product.deactivatedAt = undefined
+    await product.save()
+    return response.noContent()
+  }
 
-  public async deactive({}: HttpContextContract) {}
+  public async deactive({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('ProductPolicy').authorize('activate')
+    const product = await Product.findByOrFail('slug', params.slug)
+    product.deactivatedAt = DateTime.now()
+    await product.save()
+    return response.noContent()
+  }
 }
