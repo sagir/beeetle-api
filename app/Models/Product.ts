@@ -11,6 +11,7 @@ import {
 import { active, inactive } from 'App/utils/database/scopes'
 import ProductImage from './ProductImage'
 import Specification from './Specification'
+import Category from './Category'
 
 export default class Product extends BaseModel {
   @column({ isPrimary: true })
@@ -44,6 +45,9 @@ export default class Product extends BaseModel {
     pivotColumns: ['value', 'visible'],
   })
   public specifications: ManyToMany<typeof Specification>
+
+  @manyToMany(() => Category)
+  public categories: ManyToMany<typeof Category>
 
   // scopes
   public static active = scope(active)

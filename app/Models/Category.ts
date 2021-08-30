@@ -6,9 +6,12 @@ import {
   column,
   HasMany,
   hasMany,
+  ManyToMany,
+  manyToMany,
   scope,
 } from '@ioc:Adonis/Lucid/Orm'
 import { active, inactive } from 'App/utils/database/scopes'
+import Product from './Product'
 
 export default class Category extends BaseModel {
   @column({ isPrimary: true })
@@ -40,6 +43,9 @@ export default class Category extends BaseModel {
 
   @hasMany(() => Category, { foreignKey: 'parent_id' })
   public children: HasMany<typeof Category>
+
+  @manyToMany(() => Product)
+  public products: ManyToMany<typeof Product>
 
   // scopes
   public static active = scope(active)
