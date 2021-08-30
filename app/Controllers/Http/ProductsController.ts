@@ -107,9 +107,16 @@ export default class ProductsController {
         message: 'Something went wrong. Please try again.',
       })
     }
+
+    return ctx.response.noContent()
   }
 
-  public async destroy({}: HttpContextContract) {}
+  public async destroy({ bouncer, params, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('ProductPolicy').authorize('delete')
+    const product = await Product.findByOrFail('slug', params.slug)
+    await product.delete()
+    return response.noContent()
+  }
 
   public async activate({}: HttpContextContract) {}
 
