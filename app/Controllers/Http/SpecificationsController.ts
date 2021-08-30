@@ -1,6 +1,7 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Specification from 'App/Models/Specification'
+import SpecifactionValidator from 'App/Validators/SpecifactionValidator'
 
 export default class SpecificationsController {
   public async index({
@@ -24,7 +25,17 @@ export default class SpecificationsController {
     return await query.paginate(page, perPage)
   }
 
-  public async store({}: HttpContextContract) {}
+  public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {
+    await bouncer.with('SpecificationPolicy').authorize('create')
+    await request.validate(SpecifactionValidator)
+    const specification = new Specification()
+
+    specification.name = request.input('name')
+    specification.description = request.input('description')
+
+    await specification.save()
+    return response.created(specification)
+  }
 
   public async show({}: HttpContextContract) {}
 
