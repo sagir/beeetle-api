@@ -1,6 +1,7 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Category from 'App/Models/Category'
+import { ParentItem } from 'App/Responses/ListResponses'
 import CategoryValidator from 'App/Validators/CategoryValidator'
 import { DateTime } from 'luxon'
 
@@ -24,6 +25,18 @@ export default class CategoriesController {
     }
 
     return await query.orderBy(orderBy, orderDirection).paginate(page, perPage)
+  }
+
+  public async list({ bouncer }: HttpContextContract): Promise<ParentItem[]> {
+    await bouncer.with('CategoryPolicy').authorize('viewList')
+    return await Category.query()
+      .whereNull('parent_id')
+      .withScopes((q) => q.active())
+      .preload('children', (childQuery) => {
+        childQuery.withScopes((q) => q.active()).select('id', 'name')
+      })
+      .select('id', 'name')
+      .exec()
   }
 
   public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {

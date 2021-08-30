@@ -10,8 +10,8 @@ export default class CategoryPolicy extends BasePolicy {
   }
 
   @action({ allowGuest: true })
-  public async viewList(user: User): Promise<boolean> {
-    if (!user) return false
+  public async viewList(user: User | null): Promise<boolean> {
+    if (!user) return true
     return await hasPermission(user, this.model, 'read')
   }
 
