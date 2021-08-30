@@ -21,6 +21,9 @@ export default class ProductSpecificationPivot extends BaseSchema {
         .inTable('specifications')
         .onDelete('CASCADE')
 
+      // preventing duplicates
+      table.unique(['product_id', 'specification_id'])
+
       // pivot extra columns
       table.text('value').notNullable()
       table.boolean('visible').notNullable().defaultTo(true)
