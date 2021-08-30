@@ -37,7 +37,10 @@ export default class SpecificationsController {
     return response.created(specification)
   }
 
-  public async show({}: HttpContextContract) {}
+  public async show({ bouncer, params }: HttpContextContract): Promise<Specification> {
+    await bouncer.with('SpecificationPolicy').authorize('view')
+    return await Specification.findOrFail(params.id)
+  }
 
   public async update({}: HttpContextContract) {}
 
