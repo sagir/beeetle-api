@@ -55,6 +55,7 @@ export default class ProductValidator {
     ]),
     categories: schema
       .array([
+        rules.distinct('*'),
         rules.minLength(1),
         rules.allExists({
           table: 'categories',
@@ -65,6 +66,22 @@ export default class ProductValidator {
         }),
       ])
       .members(schema.number([rules.unsigned()])),
+    specifications: schema
+      .array([
+        rules.distinct('id'),
+        rules.minLength(1),
+        rules.allExists({
+          table: 'specifications',
+          column: 'id',
+          field: 'id',
+        }),
+      ])
+      .members(
+        schema.object().members({
+          id: schema.number([rules.required(), rules.unsigned()]),
+          value: schema.string({ trim: true }, [rules.required(), rules.maxLength(1000)]),
+        })
+      ),
   })
 
   /**

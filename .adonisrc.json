@@ -28,7 +28,7 @@
       ]
     },
     {
-      "file": "./start/validator/Rules",
+      "file": "./start/validator/allExists",
       "environment": [
         "web"
       ]

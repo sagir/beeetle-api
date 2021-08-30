@@ -1,28 +1,24 @@
 import { validator } from '@ioc:Adonis/Core/Validator'
-import Database, { DatabaseQueryBuilderContract } from '@ioc:Adonis/Lucid/Database'
-
-interface ArrayExistsWhereCallback {
-  (query: DatabaseQueryBuilderContract): void
-}
-
-interface ArrayExistsDbOptions {
-  table: string
-  column?: string
-  where?: ArrayExistsWhereCallback
-}
+import Database from '@ioc:Adonis/Lucid/Database'
+import { AllExistsDbOptions } from './AllExistsDbOptionsInterface'
 
 validator.rule(
   'allExists',
   async (
     value,
-    options: ArrayExistsDbOptions,
+    options: AllExistsDbOptions,
     { pointer, arrayExpressionPointer, errorReporter }
   ) => {
     if (!value || !Array.isArray(value)) {
       return
     }
 
-    const query = Database.from(options.table).whereIn(options.column || 'id', value)
+    let values = value
+    if (options.field) {
+      values.map((item) => item[options.field as string])
+    }
+
+    const query = Database.from(options.table).whereIn(options.column || 'id', values)
 
     if (options.where) {
       query.andWhere(options.where)
