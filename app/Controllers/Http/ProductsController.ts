@@ -47,13 +47,11 @@ export default class ProductsController {
     try {
       await product.useTransaction(trx).save()
       await product.related('categories').attach(request.input('categories'), trx)
-      await product.related('specifications').attach(
-        request.input('specifications').map((item) => {
-          let obj = {}
-          obj[item.id] = { value: item.value }
-        }),
-        trx
-      )
+
+      await product
+        .related('specifications')
+        .attach(this.getSpecificationData(request.input('specifications')), trx)
+
       await trx.commit()
     } catch (error) {
       trx.rollback()
@@ -65,9 +63,51 @@ export default class ProductsController {
     return response.created(product)
   }
 
-  public async show({}: HttpContextContract) {}
+  private getSpecificationData(specifications: any[]): any[] {
+    return specifications.map((specification) => {
+      let obj = {}
 
-  public async update({}: HttpContextContract) {}
+      obj[specification.id] = {
+        value: specification.value,
+        visible: specification.visible,
+      }
+
+      return obj
+    })
+  }
+
+  public async show({ bouncer, params }: HttpContextContract): Promise<Product> {
+    await bouncer.with('ProductPolicy').authorize('view')
+    return await Product.findByOrFail('slug', params.slug)
+  }
+
+  public async update(ctx: HttpContextContract): Promise<void> {
+    await ctx.bouncer.with('ProductPolicy').authorize('update')
+    const product = await Product.findByOrFail('slug', ctx.params.slug)
+    await ctx.request.validate(new ProductValidator(ctx, product.id))
+    const trx = await Database.transaction()
+
+    product.name = ctx.request.input('name')
+    product.slug = ctx.request.input('slug')
+    product.code = ctx.request.input('code')
+    product.description = ctx.request.input('description')
+
+    try {
+      await product.useTransaction(trx).save()
+      await product.related('categories').sync(ctx.request.input('permissions'), undefined, trx)
+
+      await product
+        .related('specifications')
+        .sync(this.getSpecificationData(ctx.request.input('specifications')), undefined, trx)
+
+      await trx.commit()
+    } catch (error) {
+      await trx.rollback()
+      return ctx.response.internalServerError({
+        message: 'Something went wrong. Please try again.',
+      })
+    }
+  }
 
   public async destroy({}: HttpContextContract) {}
 

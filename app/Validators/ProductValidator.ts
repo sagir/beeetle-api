@@ -86,6 +86,7 @@ export default class ProductValidator {
         schema.object().members({
           id: schema.number([rules.required(), rules.unsigned()]),
           value: schema.string({ trim: true }, [rules.required(), rules.maxLength(1000)]),
+          visible: schema.boolean([rules.required]),
         })
       ),
   })
