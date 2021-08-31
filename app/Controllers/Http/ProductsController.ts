@@ -85,6 +85,13 @@ export default class ProductsController {
       .withScopes((q) => q.active())
       .count('id', 'total')
 
+    // @ts-ignore
+    if (!categories.total) {
+      return response.badRequest({
+        message: 'Product required at-least 1 category.',
+      })
+    }
+
     const [specifications] = await product
       .related('specifications')
       .query()
@@ -93,7 +100,7 @@ export default class ProductsController {
       .count('id', 'total')
 
     // @ts-ignore
-    if (!categories.total || !specifications.total) {
+    if (!specifications.total) {
       return response.badRequest({
         message: 'Product required at-least 1 category and 1 specification.',
       })
