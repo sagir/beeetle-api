@@ -1,4 +1,5 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+import Database from '@ioc:Adonis/Lucid/Database'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Product from 'App/Models/Product'
 import ProductValidator from 'App/Validators/ProductValidator'
@@ -77,6 +78,23 @@ export default class ProductsController {
   public async activate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('ProductPolicy').authorize('activate')
     const product = await Product.findByOrFail('slug', params.slug)
+
+    // const [res] = await Database.from('category_product')
+    //   .debug(true)
+    //   .join('product_specification', (joinQuery) => {
+    //     joinQuery.on('category_product.product_id', 'product_specification.product_id')
+    //   })
+    //   .whereExists(
+    //     Database.from('categories')
+    //       .where('categories.id', 'category_product.id')
+    //       .andWhere((query) => {
+    //         query.whereNull('deactivated_at').orWhere('deactivated_at', '>', DateTime.now().toSQL())
+    //       })
+    //       .limit(1)
+    //   )
+    //   .count('*', 'total')
+
+    // console.log(res)
 
     const [categories] = await product
       .related('categories')
