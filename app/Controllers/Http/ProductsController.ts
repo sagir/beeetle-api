@@ -156,9 +156,11 @@ export default class ProductsController {
               table: 'categories',
               column: 'id',
               where: (query: DatabaseQueryBuilderContract) => {
-                query
-                  .whereNull('deactivate_at')
-                  .orWhere('deactivated_at', '>', DateTime.now().toSQL())
+                query.whereNotNull('parent_id').andWhere((whereQuery) => {
+                  whereQuery
+                    .whereNull('deactivate_at')
+                    .orWhere('deactivated_at', '>', DateTime.now().toSQL())
+                })
               },
             }),
           ])
@@ -199,22 +201,20 @@ export default class ProductsController {
           .members(
             schema.object().members({
               id: schema.number([rules.required(), rules.unsigned()]),
-              value: schema.string({ trim: true }, [rules.required(), rules.maxLength(1)]),
+              value: schema.string({ trim: true }, [rules.required(), rules.minLength(1)]),
               visible: schema.boolean([rules.required()]),
             })
           ),
       }),
     })
 
-    const specifications = request.input('specifications').map((specification) => {
-      let obj = {}
+    const specifications = {}
 
-      obj[specification.id] = {
+    request.input('specifications').forEach((specification) => {
+      specifications[specification.id] = {
         value: specification.value,
         visible: specification.visible,
       }
-
-      return obj
     })
 
     await product.related('specifications').sync(specifications)
