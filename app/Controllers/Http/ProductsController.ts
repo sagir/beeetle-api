@@ -1,6 +1,6 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { schema, rules } from '@ioc:Adonis/Core/Validator'
-import Database, { DatabaseQueryBuilderContract } from '@ioc:Adonis/Lucid/Database'
+import { DatabaseQueryBuilderContract } from '@ioc:Adonis/Lucid/Database'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Product from 'App/Models/Product'
 import ProductValidator from 'App/Validators/ProductValidator'
@@ -138,7 +138,7 @@ export default class ProductsController {
     return response.noContent()
   }
 
-  public async storeCategories({
+  public async updateCategories({
     bouncer,
     params,
     request,
@@ -167,6 +167,57 @@ export default class ProductsController {
     })
 
     await product.related('categories').sync(request.input('categories'))
+    return response.noContent()
+  }
+
+  public async updateSpecifications({
+    bouncer,
+    params,
+    request,
+    response,
+  }: HttpContextContract): Promise<void> {
+    await bouncer.with('SpecificationPolicy').authorize('update')
+    const product = await Product.findByOrFail('slug', params.slug)
+
+    await request.validate({
+      schema: schema.create({
+        specifications: schema
+          .array([
+            rules.required(),
+            rules.minLength(1),
+            rules.allExists({
+              table: 'specifications',
+              column: 'id',
+              field: 'id',
+              where: (query: DatabaseQueryBuilderContract) => {
+                query
+                  .whereNull('deactivated_at')
+                  .orWhere('deactivated_at', '>', DateTime.now().toSQL())
+              },
+            }),
+          ])
+          .members(
+            schema.object().members({
+              id: schema.number([rules.required(), rules.unsigned()]),
+              value: schema.string({ trim: true }, [rules.required(), rules.maxLength(1)]),
+              visible: schema.boolean([rules.required()]),
+            })
+          ),
+      }),
+    })
+
+    const specifications = request.input('specifications').map((specification) => {
+      let obj = {}
+
+      obj[specification.id] = {
+        value: specification.value,
+        visible: specification.visible,
+      }
+
+      return obj
+    })
+
+    await product.related('specifications').sync(specifications)
     return response.noContent()
   }
 }
