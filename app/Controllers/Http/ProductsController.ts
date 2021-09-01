@@ -1,5 +1,6 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import Database from '@ioc:Adonis/Lucid/Database'
+import { schema, rules } from '@ioc:Adonis/Core/Validator'
+import Database, { DatabaseQueryBuilderContract } from '@ioc:Adonis/Lucid/Database'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Product from 'App/Models/Product'
 import ProductValidator from 'App/Validators/ProductValidator'
@@ -134,6 +135,38 @@ export default class ProductsController {
     const product = await Product.findByOrFail('slug', params.slug)
     product.deactivatedAt = DateTime.now()
     await product.save()
+    return response.noContent()
+  }
+
+  public async storeCategories({
+    bouncer,
+    params,
+    request,
+    response,
+  }: HttpContextContract): Promise<void> {
+    await bouncer.with('ProductPolicy').authorize('update')
+    const product = await Product.findByOrFail('slug', params.slug)
+
+    await request.validate({
+      schema: schema.create({
+        categories: schema.array([rules.required(), rules.minLength(1)]).members(
+          schema.number([
+            rules.unsigned(),
+            rules.allExists({
+              table: 'categories',
+              column: 'id',
+              where: (query: DatabaseQueryBuilderContract) => {
+                query
+                  .whereNull('deactivate_at')
+                  .orWhere('deactivated_at', '>', DateTime.now().toSQL())
+              },
+            }),
+          ])
+        ),
+      }),
+    })
+
+    await product.related('categories').sync(request.input('categories'))
     return response.noContent()
   }
 }
