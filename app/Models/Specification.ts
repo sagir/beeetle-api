@@ -11,7 +11,7 @@ export default class Specification extends BaseModel {
   public name: string
 
   @column()
-  public description: string
+  public description?: string
 
   @column.dateTime()
   public deactivatedAt?: DateTime
