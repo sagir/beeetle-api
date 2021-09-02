@@ -2,29 +2,26 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Category from 'App/Models/Category'
 import { ParentItem } from 'App/Responses/ListResponses'
-import CategoryValidator from 'App/Validators/CategoryValidator'
-import { DateTime } from 'luxon'
+import CategoryService from 'App/Services/CategoryService'
+import CommonFilterQueryValidator from 'App/Validators/CommonFilterQueryValidator'
 
 export default class CategoriesController {
-  public async index({
-    bouncer,
-    request,
-  }: HttpContextContract): Promise<ModelPaginatorContract<Category>> {
-    await bouncer.with('CategoryPolicy').authorize('view')
+  public async index(ctx: HttpContextContract): Promise<ModelPaginatorContract<Category>> {
+    await ctx.bouncer.with('CategoryPolicy').authorize('view')
+    await ctx.request.validate(
+      new CommonFilterQueryValidator(ctx, ['name', 'created_at', 'updated_at'])
+    )
 
-    const page = request.input('page', 1)
-    const perPage = request.input('perPage', 10)
-    const active = request.input('activeItems')
-    const orderBy = request.input('orderBy', 'name')
-    const orderDirection = request.input('orderDirection', 'asc')
+    return await CategoryService.getPaginatedCategories(ctx)
+  }
 
-    const query = Category.query().whereNull('parent_id').preload('children')
+  public async inactive(ctx: HttpContextContract): Promise<ModelPaginatorContract<Category>> {
+    await ctx.bouncer.with('CategoryPolicy').authorize('view')
+    await ctx.request.validate(
+      new CommonFilterQueryValidator(ctx, ['name', 'created_at', 'updated_at', 'deactivated_at'])
+    )
 
-    if (active !== undefined) {
-      query.withScopes((q) => (active ? q.active() : q.inactive()))
-    }
-
-    return await query.orderBy(orderBy, orderDirection).paginate(page, perPage)
+    return await CategoryService.getPaginatedCategories(ctx, false)
   }
 
   public async list({ bouncer }: HttpContextContract): Promise<ParentItem[]> {
@@ -33,50 +30,28 @@ export default class CategoriesController {
       .whereNull('parent_id')
       .withScopes((q) => q.active())
       .preload('children', (childQuery) => {
-        childQuery.withScopes((q) => q.active()).select('id', 'name')
+        childQuery.select('id', 'name')
       })
       .select('id', 'name')
       .exec()
   }
 
-  public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {
-    await bouncer.with('CategoryPolicy').authorize('create')
-    await request.validate(CategoryValidator)
-    const category = new Category()
-
-    category.name = request.input('name')
-    category.slug = request.input('slug')
-    category.description = request.input('description')
-    category.parent_id = request.input('parent_id')
-
-    await category.save()
-    return response.created(category)
+  public async store(ctx: HttpContextContract): Promise<void> {
+    await ctx.bouncer.with('CategoryPolicy').authorize('create')
+    const category = await CategoryService.saveCategory(ctx, new Category())
+    return ctx.response.created(category)
   }
 
   public async show({ bouncer, params }: HttpContextContract): Promise<Category> {
     await bouncer.with('CategoryPolicy').authorize('view')
     const category = await Category.findByOrFail('slug', params.slug)
-
-    if (category.parent_id) {
-      await category.load('parent')
-    } else {
-      await category.load('children')
-    }
-
+    await category.load(category.parent_id ? 'parent' : 'children')
     return category
   }
 
   public async update(ctx: HttpContextContract): Promise<void> {
     await ctx.bouncer.with('CategoryPolicy').authorize('update')
-    const category = await Category.findByOrFail('slug', ctx.params.slug)
-    await ctx.request.validate(new CategoryValidator(ctx, category.id))
-
-    category.name = ctx.request.input('name')
-    category.slug = ctx.request.input('slug')
-    category.description = ctx.request.input('description')
-    category.parent_id = ctx.request.input('parent_id')
-
-    await category.save()
+    await CategoryService.saveCategory(ctx, await Category.findByOrFail('slug', ctx.params.slug))
     return ctx.response.noContent()
   }
 
@@ -89,17 +64,13 @@ export default class CategoriesController {
 
   public async activate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('CategoryPolicy').authorize('activate')
-    const category = await Category.findByOrFail('slug', params.slug)
-    category.deactivateAt = undefined
-    await category.save()
+    await CategoryService.updateState(params.slug, true)
     return response.noContent()
   }
 
   public async deactivate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('CategoryPolicy').authorize('activate')
-    const category = await Category.findByOrFail('slug', params.slug)
-    category.deactivateAt = DateTime.now()
-    await category.save()
+    await CategoryService.updateState(params.slug, false)
     return response.noContent()
   }
 }

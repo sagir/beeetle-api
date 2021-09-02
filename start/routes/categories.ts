@@ -2,6 +2,7 @@ import Route from '@ioc:Adonis/Core/Route'
 
 Route.group(() => {
   Route.get('', 'CategoriesController.index').as('index').middleware('auth')
+  Route.get('inactive', 'CategoriesController.inactive').as('index.inactive').middleware('auth')
   Route.get('list', 'CategoriesController.list').as('list')
   Route.post('', 'CategoriesController.store').as('store').middleware('auth')
   Route.get(':slug', 'CategoriesController.show').as('show').middleware('auth')
