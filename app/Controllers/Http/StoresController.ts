@@ -1,8 +1,6 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Store from 'App/Models/Store'
-import StoreValidator from 'App/Validators/StoreValidator'
-import { DateTime } from 'luxon'
 import Database from '@ioc:Adonis/Lucid/Database'
 import CommonFilterQueryValidator from 'App/Validators/CommonFilterQueryValidator'
 import StoreService from 'App/Services/StoreService'
@@ -51,8 +49,7 @@ export default class StoresController {
   public async activate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('StorePolicy').authorize('activate')
     const store = await Store.findByOrFail('slug', params.slug)
-    store.deactivatedAt = undefined
-    await store.save()
+    await StoreService.updateState(store, true)
     return response.noContent()
   }
 
@@ -66,8 +63,7 @@ export default class StoresController {
       })
     }
 
-    store.deactivatedAt = DateTime.now()
-    await store.save()
+    await StoreService.updateState(store, false)
     return response.noContent()
   }
 

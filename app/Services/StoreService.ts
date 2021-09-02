@@ -2,6 +2,7 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Store from 'App/Models/Store'
 import StoreValidator from 'App/Validators/StoreValidator'
+import { DateTime } from 'luxon'
 
 export default class StoreService {
   public static async getPaginatedStores(
@@ -33,5 +34,10 @@ export default class StoreService {
     store.slug = ctx.request.input('slug')
     store.address = ctx.request.input('address')
     return await store.save()
+  }
+
+  public static async updateState(store: Store, activate: boolean): Promise<void> {
+    store.deactivatedAt = activate ? undefined : DateTime.now()
+    await store.save()
   }
 }
