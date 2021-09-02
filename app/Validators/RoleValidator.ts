@@ -47,7 +47,7 @@ export default class RoleValidator {
           column: 'id',
         }),
       ])
-      .members(schema.number([rules.unsigned()])),
+      .members(schema.number([rules.unsigned(), rules.notIn([0])])),
   })
 
   /**
