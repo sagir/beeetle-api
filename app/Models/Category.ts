@@ -38,13 +38,27 @@ export default class Category extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   public updatedAt: DateTime
 
-  @belongsTo(() => Category, { localKey: 'parent_id' })
+  @belongsTo(() => Category, {
+    localKey: 'parent_id',
+    onQuery(query) {
+      query.withScopes((q) => q.active())
+    },
+  })
   public parent: BelongsTo<typeof Category>
 
-  @hasMany(() => Category, { foreignKey: 'parent_id' })
+  @hasMany(() => Category, {
+    foreignKey: 'parent_id',
+    onQuery(query) {
+      query.withScopes((q) => q.active())
+    },
+  })
   public children: HasMany<typeof Category>
 
-  @manyToMany(() => Product)
+  @manyToMany(() => Product, {
+    onQuery(query) {
+      query.withScopes((q) => q.active())
+    },
+  })
   public products: ManyToMany<typeof Product>
 
   // scopes
