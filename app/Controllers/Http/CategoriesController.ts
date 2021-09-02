@@ -3,9 +3,7 @@ import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Category from 'App/Models/Category'
 import { ParentItem } from 'App/Responses/ListResponses'
 import CategoryService from 'App/Services/CategoryService'
-import CategoryValidator from 'App/Validators/CategoryValidator'
 import CommonFilterQueryValidator from 'App/Validators/CommonFilterQueryValidator'
-import { DateTime } from 'luxon'
 
 export default class CategoriesController {
   public async index(ctx: HttpContextContract): Promise<ModelPaginatorContract<Category>> {
