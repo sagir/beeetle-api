@@ -28,6 +28,7 @@ export default class RoleValidator {
     slug: schema.string({ trim: true }, [
       rules.minLength(3),
       rules.maxLength(100),
+      rules.notIn(['inactive']),
       rules.unique({
         table: 'roles',
         column: 'slug',
