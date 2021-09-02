@@ -19,11 +19,26 @@ export default class RolesController {
         'description',
         'created_at',
         'updated_at',
-        'deactivated_at',
       ])
     )
 
     return await RoleService.getPaginatedRoles(ctx)
+  }
+
+  public async inactive(ctx: HttpContextContract): Promise<ModelPaginatorContract<Role>> {
+    await ctx.bouncer.with('RolePolicy').authorize('view')
+    await ctx.request.validate(
+      new CommonFilterQueryValidator(ctx, [
+        'name',
+        'slug',
+        'description',
+        'created_at',
+        'updated_at',
+        'deactivated_at',
+      ])
+    )
+
+    return await RoleService.getPaginatedRoles(ctx, false)
   }
 
   public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {

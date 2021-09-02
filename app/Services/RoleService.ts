@@ -5,7 +5,7 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 export default class RoleService {
   public static async getPaginatedRoles(
     { request }: HttpContextContract,
-    active = true
+    active: boolean = true
   ): Promise<ModelPaginatorContract<Role>> {
     const page = request.input('page', 1)
     const perPage = request.input('perPage', 10)
