@@ -32,7 +32,7 @@ export default class CategoriesController {
       .whereNull('parent_id')
       .withScopes((q) => q.active())
       .preload('children', (childQuery) => {
-        childQuery.withScopes((q) => q.active()).select('id', 'name')
+        childQuery.select('id', 'name')
       })
       .select('id', 'name')
       .exec()
