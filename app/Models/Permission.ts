@@ -21,7 +21,7 @@ export default class Permission extends BaseModel {
   @manyToMany(() => Role, {
     onQuery(query) {
       query.withScopes((q) => q.active())
-    }
+    },
   })
   public roles: ManyToMany<typeof Role>
 
