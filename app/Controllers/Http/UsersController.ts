@@ -7,6 +7,7 @@ import { DateTime } from 'luxon'
 import Role from 'App/Models/Role'
 import Permission from 'App/Models/Permission'
 import UserCreateValidator from 'App/Validators/UserCreateValidator'
+import UserUpdateValidator from 'App/Validators/UserUpdateValidator'
 
 export default class UsersController {
   public async index({
@@ -63,28 +64,7 @@ export default class UsersController {
   public async update(ctx: HttpContextContract): Promise<void> {
     await ctx.bouncer.with('UserPolicy').authorize('update')
     const user = await User.findOrFail(ctx.params.id)
-
-    await ctx.request.validate({
-      schema: schema.create({
-        name: schema.string({ trim: true }, [
-          rules.required(),
-          rules.minLength(3),
-          rules.maxLength(100),
-        ]),
-        email: schema.string({ trim: true }, [
-          rules.required(),
-          rules.email(),
-          rules.unique({
-            table: 'users',
-            column: 'email',
-            whereNot: { id: user.id },
-          }),
-        ]),
-        roles: schema
-          .array([rules.required(), rules.minLength(1)])
-          .members(schema.number([rules.unsigned()])),
-      }),
-    })
+    await ctx.request.validate(new UserUpdateValidator(ctx, user.id))
 
     user.name = ctx.request.input('name')
     user.email = ctx.request.input('email')
