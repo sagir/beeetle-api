@@ -43,10 +43,20 @@ export default class Product extends BaseModel {
 
   @manyToMany(() => Specification, {
     pivotColumns: ['value', 'visible'],
+    onQuery(query) {
+      query.withScopes((q) => q.active())
+    },
   })
   public specifications: ManyToMany<typeof Specification>
 
-  @manyToMany(() => Category)
+  @manyToMany(() => Category, {
+    onQuery(query) {
+      query
+        .withScopes((q) => q.active())
+        .andWhereNotNull('parent_id')
+        .whereHas('parent', (whq) => whq.withScopes((sq) => sq.active()))
+    },
+  })
   public categories: ManyToMany<typeof Category>
 
   // scopes

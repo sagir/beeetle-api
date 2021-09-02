@@ -38,7 +38,7 @@ export default class Category extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   public updatedAt: DateTime
 
-  @belongsTo(() => Category, { localKey: 'parent_id' })
+  @belongsTo(() => Category, { foreignKey: 'parent_id' })
   public parent: BelongsTo<typeof Category>
 
   @hasMany(() => Category, { foreignKey: 'parent_id' })
