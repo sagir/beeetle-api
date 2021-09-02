@@ -55,13 +55,7 @@ export default class CategoriesController {
   public async show({ bouncer, params }: HttpContextContract): Promise<Category> {
     await bouncer.with('CategoryPolicy').authorize('view')
     const category = await Category.findByOrFail('slug', params.slug)
-
-    if (category.parent_id) {
-      await category.load('parent')
-    } else {
-      await category.load('children')
-    }
-
+    await category.load(category.parent_id ? 'parent' : 'children')
     return category
   }
 
