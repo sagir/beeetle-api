@@ -1,6 +1,7 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Category from 'App/Models/Category'
+import { DateTime } from 'luxon'
 
 export default class CategoryService {
   public static async getPaginatedCategories(
@@ -26,5 +27,11 @@ export default class CategoryService {
     }
 
     return await query.paginate(page, perPage)
+  }
+
+  public static async updateState(slug: string, activate: boolean): Promise<void> {
+    const category = await Category.findByOrFail('slug', slug)
+    category.deactivateAt = activate ? undefined : DateTime.now()
+    await category.save()
   }
 }

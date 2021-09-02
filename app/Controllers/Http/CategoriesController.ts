@@ -82,17 +82,13 @@ export default class CategoriesController {
 
   public async activate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('CategoryPolicy').authorize('activate')
-    const category = await Category.findByOrFail('slug', params.slug)
-    category.deactivateAt = undefined
-    await category.save()
+    await CategoryService.updateState(params.slug, true)
     return response.noContent()
   }
 
   public async deactivate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('CategoryPolicy').authorize('activate')
-    const category = await Category.findByOrFail('slug', params.slug)
-    category.deactivateAt = DateTime.now()
-    await category.save()
+    await CategoryService.updateState(params.slug, false)
     return response.noContent()
   }
 }
