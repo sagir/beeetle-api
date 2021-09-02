@@ -7,27 +7,17 @@ import Role from 'App/Models/Role'
 import Permission from 'App/Models/Permission'
 import UserCreateValidator from 'App/Validators/UserCreateValidator'
 import UserUpdateValidator from 'App/Validators/UserUpdateValidator'
+import UserFilterQueryValidator from 'App/Validators/UserFilterQueryValidator'
+import UserService from 'App/Services/UserService'
 
 export default class UsersController {
-  public async index({
-    bouncer,
-    request,
-  }: HttpContextContract): Promise<ModelPaginatorContract<User>> {
-    await bouncer.with('UserPolicy').authorize('view')
+  public async index(ctx: HttpContextContract): Promise<ModelPaginatorContract<User>> {
+    await ctx.bouncer.with('UserPolicy').authorize('view')
+    await ctx.request.validate(
+      new UserFilterQueryValidator(ctx, ['name', 'email', 'created_at', 'updated_at'])
+    )
 
-    const page = request.input('page', 1)
-    const perPage = request.input('perPage', 10)
-    const active = request.input('activeItems')
-    const orderBy = request.input('orderBy', 'name')
-    const orderDirection = request.input('orderDirection', 'asc')
-
-    const query = User.query()
-
-    if (active !== undefined) {
-      query.withScopes((q) => (active ? q.active() : q.inactive()))
-    }
-
-    return await query.orderBy(orderBy, orderDirection).paginate(page, perPage)
+    return await UserService.getPaginatedUsers(ctx)
   }
 
   public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {
