@@ -50,6 +50,7 @@ export default class CategoryValidator {
       rules.exists({
         table: 'categories',
         column: 'id',
+        where: { parent_id: null },
       }),
     ]),
   })
