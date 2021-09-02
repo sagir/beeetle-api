@@ -19,7 +19,7 @@ export default class RoleSeeder extends BaseSeeder {
     await managerRole.related('permissions').attach(
       <number[]>permissions
         .map((item) => {
-          if (item.model !== 'admin') {
+          if (item.model !== 'user') {
             return item.id
           }
         })

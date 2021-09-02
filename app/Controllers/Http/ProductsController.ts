@@ -1,6 +1,6 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { schema, rules } from '@ioc:Adonis/Core/Validator'
-import Database, { DatabaseQueryBuilderContract } from '@ioc:Adonis/Lucid/Database'
+import { DatabaseQueryBuilderContract } from '@ioc:Adonis/Lucid/Database'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Product from 'App/Models/Product'
 import ProductValidator from 'App/Validators/ProductValidator'
@@ -80,48 +80,23 @@ export default class ProductsController {
     await bouncer.with('ProductPolicy').authorize('activate')
     const product = await Product.findByOrFail('slug', params.slug)
 
-    // const [res] = await Database.from('category_product')
-    //   .debug(true)
-    //   .join('product_specification', (joinQuery) => {
-    //     joinQuery.on('category_product.product_id', 'product_specification.product_id')
-    //   })
-    //   .whereExists(
-    //     Database.from('categories')
-    //       .where('categories.id', 'category_product.id')
-    //       .andWhere((query) => {
-    //         query.whereNull('deactivated_at').orWhere('deactivated_at', '>', DateTime.now().toSQL())
-    //       })
-    //       .limit(1)
-    //   )
-    //   .count('*', 'total')
+    let [categories] = await product.related('categories').query().count('id', 'total')
 
-    // console.log(res)
-
-    const [categories] = await product
-      .related('categories')
-      .query()
-      .whereNull('parent_id')
-      .withScopes((q) => q.active())
-      .count('id', 'total')
-
-    // @ts-ignore
-    if (!categories.total) {
+    if (!categories.$extras.total) {
       return response.badRequest({
-        message: 'Product required at-least 1 category.',
+        message: 'Product needs at-least 1 categry to be cativated',
       })
     }
 
-    const [specifications] = await product
+    let [specifications] = await product
       .related('specifications')
       .query()
-      .withScopes((q) => q.active())
-      .wherePivot('visible', true)
+      .wherePivot('visible', 1)
       .count('id', 'total')
 
-    // @ts-ignore
-    if (!specifications.total) {
+    if (!specifications.$extras.total) {
       return response.badRequest({
-        message: 'Product required at-least 1 category and 1 specification.',
+        message: 'Product needs at-least 1 visible specification to be cativated',
       })
     }
 
@@ -130,7 +105,7 @@ export default class ProductsController {
     return response.noContent()
   }
 
-  public async deactive({ bouncer, params, response }: HttpContextContract): Promise<void> {
+  public async deactivate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('ProductPolicy').authorize('activate')
     const product = await Product.findByOrFail('slug', params.slug)
     product.deactivatedAt = DateTime.now()
@@ -138,7 +113,7 @@ export default class ProductsController {
     return response.noContent()
   }
 
-  public async storeCategories({
+  public async updateCategories({
     bouncer,
     params,
     request,
@@ -156,9 +131,11 @@ export default class ProductsController {
               table: 'categories',
               column: 'id',
               where: (query: DatabaseQueryBuilderContract) => {
-                query
-                  .whereNull('deactivate_at')
-                  .orWhere('deactivated_at', '>', DateTime.now().toSQL())
+                query.whereNotNull('parent_id').andWhere((whereQuery) => {
+                  whereQuery
+                    .whereNull('deactivate_at')
+                    .orWhere('deactivated_at', '>', DateTime.now().toSQL())
+                })
               },
             }),
           ])
@@ -167,6 +144,55 @@ export default class ProductsController {
     })
 
     await product.related('categories').sync(request.input('categories'))
+    return response.noContent()
+  }
+
+  public async updateSpecifications({
+    bouncer,
+    params,
+    request,
+    response,
+  }: HttpContextContract): Promise<void> {
+    await bouncer.with('SpecificationPolicy').authorize('update')
+    const product = await Product.findByOrFail('slug', params.slug)
+
+    await request.validate({
+      schema: schema.create({
+        specifications: schema
+          .array([
+            rules.required(),
+            rules.minLength(1),
+            rules.allExists({
+              table: 'specifications',
+              column: 'id',
+              field: 'id',
+              where: (query: DatabaseQueryBuilderContract) => {
+                query
+                  .whereNull('deactivated_at')
+                  .orWhere('deactivated_at', '>', DateTime.now().toSQL())
+              },
+            }),
+          ])
+          .members(
+            schema.object().members({
+              id: schema.number([rules.required(), rules.unsigned()]),
+              value: schema.string({ trim: true }, [rules.required(), rules.minLength(1)]),
+              visible: schema.boolean([rules.required()]),
+            })
+          ),
+      }),
+    })
+
+    const specifications = {}
+
+    request.input('specifications').forEach((specification) => {
+      specifications[specification.id] = {
+        value: specification.value,
+        visible: specification.visible,
+      }
+    })
+
+    await product.related('specifications').sync(specifications)
     return response.noContent()
   }
 }

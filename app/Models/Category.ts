@@ -39,7 +39,7 @@ export default class Category extends BaseModel {
   public updatedAt: DateTime
 
   @belongsTo(() => Category, {
-    localKey: 'parent_id',
+    foreignKey: 'parent_id',
     onQuery(query) {
       query.withScopes((q) => q.active())
     },
