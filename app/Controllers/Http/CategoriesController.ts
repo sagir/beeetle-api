@@ -17,6 +17,15 @@ export default class CategoriesController {
     return await CategoryService.getPaginatedCategories(ctx)
   }
 
+  public async inactive(ctx: HttpContextContract): Promise<ModelPaginatorContract<Category>> {
+    await ctx.bouncer.with('CategoryPolicy').authorize('view')
+    await ctx.request.validate(
+      new CommonFilterQueryValidator(ctx, ['name', 'created_at', 'updated_at', 'deactivated_at'])
+    )
+
+    return await CategoryService.getPaginatedCategories(ctx, false)
+  }
+
   public async list({ bouncer }: HttpContextContract): Promise<ParentItem[]> {
     await bouncer.with('CategoryPolicy').authorize('viewList')
     return await Category.query()
