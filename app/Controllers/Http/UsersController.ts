@@ -20,6 +20,15 @@ export default class UsersController {
     return await UserService.getPaginatedUsers(ctx)
   }
 
+  public async inactive(ctx: HttpContextContract): Promise<ModelPaginatorContract<User>> {
+    await ctx.bouncer.with('UserPolicy').authorize('view')
+    await ctx.request.validate(
+      new UserFilterQueryValidator(ctx, ['name', 'email', 'created_at', 'updated_at'])
+    )
+
+    return await UserService.getPaginatedUsers(ctx, false)
+  }
+
   public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {
     await bouncer.with('UserPolicy').authorize('create')
     await request.validate(UserCreateValidator)
