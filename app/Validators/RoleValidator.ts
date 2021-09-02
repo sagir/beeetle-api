@@ -39,7 +39,15 @@ export default class RoleValidator {
       rules.minLength(10),
       rules.maxLength(1000),
     ]),
-    permissions: schema.array([rules.minLength(1)]).members(schema.number([rules.unsigned()])),
+    permissions: schema
+      .array([
+        rules.minLength(1),
+        rules.allExists({
+          table: 'permissions',
+          column: 'id',
+        }),
+      ])
+      .members(schema.number([rules.unsigned()])),
   })
 
   /**
