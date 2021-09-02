@@ -6,6 +6,7 @@ import { schema, rules } from '@ioc:Adonis/Core/Validator'
 import { DateTime } from 'luxon'
 import Role from 'App/Models/Role'
 import Permission from 'App/Models/Permission'
+import UserCreateValidator from 'App/Validators/UserCreateValidator'
 
 export default class UsersController {
   public async index({
@@ -31,32 +32,7 @@ export default class UsersController {
 
   public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {
     await bouncer.with('UserPolicy').authorize('create')
-
-    await request.validate({
-      schema: schema.create({
-        name: schema.string({ trim: true }, [
-          rules.required(),
-          rules.minLength(3),
-          rules.maxLength(100),
-        ]),
-        email: schema.string({ trim: true }, [
-          rules.required(),
-          rules.email(),
-          rules.unique({
-            table: 'users',
-            column: 'email',
-          }),
-        ]),
-        password: schema.string({ trim: true }, [
-          rules.required(),
-          rules.minLength(6),
-          rules.maxLength(16),
-        ]),
-        roles: schema
-          .array([rules.required(), rules.minLength(1)])
-          .members(schema.number([rules.unsigned()])),
-      }),
-    })
+    await request.validate(UserCreateValidator)
 
     const user = new User()
     const trx = await Database.transaction()
