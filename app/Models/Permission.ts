@@ -18,7 +18,11 @@ export default class Permission extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   public updatedAt: DateTime
 
-  @manyToMany(() => Role)
+  @manyToMany(() => Role, {
+    onQuery(query) {
+      query.withScopes((q) => q.active())
+    },
+  })
   public roles: ManyToMany<typeof Role>
 
   @manyToMany(() => Permission, {

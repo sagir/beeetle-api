@@ -1,8 +1,8 @@
 import { schema, rules } from '@ioc:Adonis/Core/Validator'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 
-export default class RoleValidator {
-  constructor(protected ctx: HttpContextContract, private roleId: number = 0) {}
+export default class UserUpdateValidator {
+  constructor(protected ctx: HttpContextContract, private userId: number) {}
 
   /*
    * Define schema to validate the "shape", "type", "formatting" and "integrity" of data.
@@ -24,26 +24,26 @@ export default class RoleValidator {
    *    ```
    */
   public schema = schema.create({
-    name: schema.string({ trim: true }, [rules.minLength(3), rules.maxLength(100)]),
-    slug: schema.string({ trim: true }, [
+    name: schema.string({ trim: true }, [
+      rules.required(),
       rules.minLength(3),
       rules.maxLength(100),
-      rules.notIn(['inactive']),
+    ]),
+    email: schema.string({ trim: true }, [
+      rules.required(),
+      rules.email(),
       rules.unique({
-        table: 'roles',
-        column: 'slug',
-        whereNot: { id: this.roleId },
+        table: 'users',
+        column: 'email',
+        whereNot: { id: this.userId },
       }),
     ]),
-    description: schema.string.optional({ trim: true }, [
-      rules.minLength(10),
-      rules.maxLength(1000),
-    ]),
-    permissions: schema
+    roles: schema
       .array([
+        rules.required(),
         rules.minLength(1),
         rules.allExists({
-          table: 'permissions',
+          table: 'roles',
           column: 'id',
         }),
       ])

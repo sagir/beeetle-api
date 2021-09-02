@@ -23,6 +23,6 @@ export default class RoleService {
       })
     }
 
-    return await query.paginate(page || 1, perPage || 10)
+    return await query.paginate(page, perPage)
   }
 }

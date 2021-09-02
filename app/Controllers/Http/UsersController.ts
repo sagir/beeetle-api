@@ -2,61 +2,36 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import User from 'App/Models/User'
 import Database from '@ioc:Adonis/Lucid/Database'
-import { schema, rules } from '@ioc:Adonis/Core/Validator'
 import { DateTime } from 'luxon'
 import Role from 'App/Models/Role'
 import Permission from 'App/Models/Permission'
+import UserCreateValidator from 'App/Validators/UserCreateValidator'
+import UserUpdateValidator from 'App/Validators/UserUpdateValidator'
+import UserFilterQueryValidator from 'App/Validators/UserFilterQueryValidator'
+import UserService from 'App/Services/UserService'
 
 export default class UsersController {
-  public async index({
-    bouncer,
-    request,
-  }: HttpContextContract): Promise<ModelPaginatorContract<User>> {
-    await bouncer.with('UserPolicy').authorize('view')
+  public async index(ctx: HttpContextContract): Promise<ModelPaginatorContract<User>> {
+    await ctx.bouncer.with('UserPolicy').authorize('view')
+    await ctx.request.validate(
+      new UserFilterQueryValidator(ctx, ['name', 'email', 'created_at', 'updated_at'])
+    )
 
-    const page = request.input('page', 1)
-    const perPage = request.input('perPage', 10)
-    const active = request.input('activeItems')
-    const orderBy = request.input('orderBy', 'name')
-    const orderDirection = request.input('orderDirection', 'asc')
+    return await UserService.getPaginatedUsers(ctx)
+  }
 
-    const query = User.query()
+  public async inactive(ctx: HttpContextContract): Promise<ModelPaginatorContract<User>> {
+    await ctx.bouncer.with('UserPolicy').authorize('view')
+    await ctx.request.validate(
+      new UserFilterQueryValidator(ctx, ['name', 'email', 'created_at', 'updated_at'])
+    )
 
-    if (active !== undefined) {
-      query.withScopes((q) => (active ? q.active() : q.inactive()))
-    }
-
-    return await query.orderBy(orderBy, orderDirection).paginate(page, perPage)
+    return await UserService.getPaginatedUsers(ctx, false)
   }
 
   public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {
     await bouncer.with('UserPolicy').authorize('create')
-
-    await request.validate({
-      schema: schema.create({
-        name: schema.string({ trim: true }, [
-          rules.required(),
-          rules.minLength(3),
-          rules.maxLength(100),
-        ]),
-        email: schema.string({ trim: true }, [
-          rules.required(),
-          rules.email(),
-          rules.unique({
-            table: 'users',
-            column: 'email',
-          }),
-        ]),
-        password: schema.string({ trim: true }, [
-          rules.required(),
-          rules.minLength(6),
-          rules.maxLength(16),
-        ]),
-        roles: schema
-          .array([rules.required(), rules.minLength(1)])
-          .members(schema.number([rules.unsigned()])),
-      }),
-    })
+    await request.validate(UserCreateValidator)
 
     const user = new User()
     const trx = await Database.transaction()
@@ -87,28 +62,7 @@ export default class UsersController {
   public async update(ctx: HttpContextContract): Promise<void> {
     await ctx.bouncer.with('UserPolicy').authorize('update')
     const user = await User.findOrFail(ctx.params.id)
-
-    await ctx.request.validate({
-      schema: schema.create({
-        name: schema.string({ trim: true }, [
-          rules.required(),
-          rules.minLength(3),
-          rules.maxLength(100),
-        ]),
-        email: schema.string({ trim: true }, [
-          rules.required(),
-          rules.email(),
-          rules.unique({
-            table: 'users',
-            column: 'email',
-            whereNot: { id: user.id },
-          }),
-        ]),
-        roles: schema
-          .array([rules.required(), rules.minLength(1)])
-          .members(schema.number([rules.unsigned()])),
-      }),
-    })
+    await ctx.request.validate(new UserUpdateValidator(ctx, user.id))
 
     user.name = ctx.request.input('name')
     user.email = ctx.request.input('email')
@@ -151,23 +105,10 @@ export default class UsersController {
     return response.noContent()
   }
 
-  public async roles({
-    bouncer,
-    params,
-    request,
-  }: HttpContextContract): Promise<ModelPaginatorContract<Role>> {
+  public async roles({ bouncer, params }: HttpContextContract): Promise<Role[]> {
     await bouncer.with('UserPolicy').authorize('viewRoles')
     const user = await User.findOrFail(params.id)
-
-    const page = request.input('page', 1)
-    const perPage = request.input('perPage', 10)
-    const orderBy = request.input('orderBy', 'name')
-    const orderDirection = request.input('orderDirection', 'asc')
-
-    return await Role.query()
-      .whereHas('users', (query) => query.where('id', user.id))
-      .orderBy(orderBy, orderDirection)
-      .paginate(page, perPage)
+    return await user.related('roles').query().orderBy('name', 'asc').exec()
   }
 
   public async permissions({ bouncer, params }: HttpContextContract): Promise<Permission[]> {
@@ -180,8 +121,9 @@ export default class UsersController {
           usersQuery.where('id', user.id)
         })
       })
-      .select('id', 'model', 'action')
+      .select('model', 'action')
       .orderBy('model', 'asc')
+      .orderBy('action', 'asc')
       .exec()
   }
 }
