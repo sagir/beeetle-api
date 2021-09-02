@@ -24,8 +24,8 @@ export default class CommonFilterQueryValidator {
    *    ```
    */
   public schema = schema.create({
-    page: schema.number.optional([rules.unsigned()]),
-    perPage: schema.number.optional([rules.unsigned()]),
+    page: schema.number.optional([rules.unsigned(), rules.notIn([0])]),
+    perPage: schema.number.optional([rules.unsigned(), rules.notIn([0])]),
     query: schema.string.optional({ trim: true }),
     sortBy: schema.enum.optional(this.sortByColumns),
     order: schema.enum.optional(['asc', 'desc'] as const),
