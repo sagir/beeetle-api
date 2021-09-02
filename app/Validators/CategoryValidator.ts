@@ -31,6 +31,7 @@ export default class CategoryValidator {
     ]),
     slug: schema.string({ trim: true }, [
       rules.required(),
+      rules.notIn(['inactive']),
       rules.minLength(3),
       rules.maxLength(100),
       rules.unique({
@@ -45,6 +46,7 @@ export default class CategoryValidator {
     ]),
     parent_id: schema.number.optional([
       rules.unsigned(),
+      rules.notIn([0]),
       rules.exists({
         table: 'categories',
         column: 'id',
