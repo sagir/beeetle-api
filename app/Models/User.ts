@@ -36,7 +36,11 @@ export default class User extends BaseModel {
     }
   }
 
-  @manyToMany(() => Role)
+  @manyToMany(() => Role, {
+    onQuery(query) {
+      query.withScopes((q) => q.active())
+    },
+  })
   public roles: ManyToMany<typeof Role>
 
   // scopes
