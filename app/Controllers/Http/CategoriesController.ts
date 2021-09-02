@@ -2,29 +2,19 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Category from 'App/Models/Category'
 import { ParentItem } from 'App/Responses/ListResponses'
+import CategoryService from 'App/Services/CategoryService'
 import CategoryValidator from 'App/Validators/CategoryValidator'
+import CommonFilterQueryValidator from 'App/Validators/CommonFilterQueryValidator'
 import { DateTime } from 'luxon'
 
 export default class CategoriesController {
-  public async index({
-    bouncer,
-    request,
-  }: HttpContextContract): Promise<ModelPaginatorContract<Category>> {
-    await bouncer.with('CategoryPolicy').authorize('view')
+  public async index(ctx: HttpContextContract): Promise<ModelPaginatorContract<Category>> {
+    await ctx.bouncer.with('CategoryPolicy').authorize('view')
+    await ctx.request.validate(
+      new CommonFilterQueryValidator(ctx, ['name', 'created_at', 'updated_at'])
+    )
 
-    const page = request.input('page', 1)
-    const perPage = request.input('perPage', 10)
-    const active = request.input('activeItems')
-    const orderBy = request.input('orderBy', 'name')
-    const orderDirection = request.input('orderDirection', 'asc')
-
-    const query = Category.query().whereNull('parent_id').preload('children')
-
-    if (active !== undefined) {
-      query.withScopes((q) => (active ? q.active() : q.inactive()))
-    }
-
-    return await query.orderBy(orderBy, orderDirection).paginate(page, perPage)
+    return await CategoryService.getPaginatedCategories(ctx)
   }
 
   public async list({ bouncer }: HttpContextContract): Promise<ParentItem[]> {
