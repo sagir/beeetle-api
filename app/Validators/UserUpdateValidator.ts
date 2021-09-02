@@ -2,7 +2,7 @@ import { schema, rules } from '@ioc:Adonis/Core/Validator'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 
 export default class UserUpdateValidator {
-  constructor(protected ctx: HttpContextContract) {}
+  constructor(protected ctx: HttpContextContract, private userId: number) {}
 
   /*
    * Define schema to validate the "shape", "type", "formatting" and "integrity" of data.
@@ -35,6 +35,7 @@ export default class UserUpdateValidator {
       rules.unique({
         table: 'users',
         column: 'email',
+        whereNot: { id: this.userId },
       }),
     ]),
     roles: schema
