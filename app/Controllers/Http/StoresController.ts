@@ -19,7 +19,6 @@ export default class StoresController {
 
   public async store(ctx: HttpContextContract): Promise<void> {
     await ctx.bouncer.with('StorePolicy').authorize('create')
-    await ctx.request.validate(StoreValidator)
     const store = await StoreService.saveStore(ctx, new Store())
     return ctx.response.created(store)
   }
@@ -31,14 +30,7 @@ export default class StoresController {
 
   public async update(ctx: HttpContextContract): Promise<void> {
     await ctx.bouncer.with('StorePolicy').authorize('update')
-    const store = await Store.findByOrFail('slug', ctx.params.slug)
-    await ctx.request.validate(new StoreValidator(ctx, store.id))
-
-    store.name = ctx.request.input('name')
-    store.slug = ctx.request.input('slug')
-    store.address = ctx.request.input('address')
-
-    await store.save()
+    await StoreService.saveStore(ctx, await Store.findByOrFail('slug', ctx.params.slug))
     return ctx.response.noContent()
   }
 

@@ -1,6 +1,7 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Store from 'App/Models/Store'
+import StoreValidator from 'App/Validators/StoreValidator'
 
 export default class StoreService {
   public static async getPaginatedStores(
@@ -26,10 +27,11 @@ export default class StoreService {
     return await query.paginate(page, perPage)
   }
 
-  public static async saveStore({ request }: HttpContextContract, store: Store): Promise<Store> {
-    store.name = request.input('name')
-    store.slug = request.input('slug')
-    store.address = request.input('address')
+  public static async saveStore(ctx: HttpContextContract, store: Store): Promise<Store> {
+    await ctx.request.validate(new StoreValidator(ctx, store.id || 0))
+    store.name = ctx.request.input('name')
+    store.slug = ctx.request.input('slug')
+    store.address = ctx.request.input('address')
     return await store.save()
   }
 }
