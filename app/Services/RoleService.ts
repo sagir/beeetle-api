@@ -10,8 +10,8 @@ export default class RoleService {
     const page = request.input('page', 1)
     const perPage = request.input('perPage', 10)
     const search = request.input('query')
-    const sortBy = request.input('sortBy')
-    const order = request.input('order')
+    const sortBy = request.input('sortBy', 'name')
+    const order = request.input('order', 'asc')
 
     const query = Role.query()
       .withScopes((q) => (active ? q.active() : q.inactive()))
