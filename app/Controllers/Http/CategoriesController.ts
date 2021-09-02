@@ -38,18 +38,10 @@ export default class CategoriesController {
       .exec()
   }
 
-  public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {
-    await bouncer.with('CategoryPolicy').authorize('create')
-    await request.validate(CategoryValidator)
-    const category = new Category()
-
-    category.name = request.input('name')
-    category.slug = request.input('slug')
-    category.description = request.input('description')
-    category.parent_id = request.input('parent_id')
-
-    await category.save()
-    return response.created(category)
+  public async store(ctx: HttpContextContract): Promise<void> {
+    await ctx.bouncer.with('CategoryPolicy').authorize('create')
+    const category = await CategoryService.saveCategory(ctx, new Category())
+    return ctx.response.created(category)
   }
 
   public async show({ bouncer, params }: HttpContextContract): Promise<Category> {
@@ -61,15 +53,7 @@ export default class CategoriesController {
 
   public async update(ctx: HttpContextContract): Promise<void> {
     await ctx.bouncer.with('CategoryPolicy').authorize('update')
-    const category = await Category.findByOrFail('slug', ctx.params.slug)
-    await ctx.request.validate(new CategoryValidator(ctx, category.id))
-
-    category.name = ctx.request.input('name')
-    category.slug = ctx.request.input('slug')
-    category.description = ctx.request.input('description')
-    category.parent_id = ctx.request.input('parent_id')
-
-    await category.save()
+    await CategoryService.saveCategory(ctx, await Category.findByOrFail('slug', ctx.params.slug))
     return ctx.response.noContent()
   }
 

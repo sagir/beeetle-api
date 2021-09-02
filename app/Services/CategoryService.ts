@@ -2,6 +2,7 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Category from 'App/Models/Category'
 import { DateTime } from 'luxon'
+import CategoryValidator from 'App/Validators/CategoryValidator'
 
 export default class CategoryService {
   public static async getPaginatedCategories(
@@ -33,5 +34,19 @@ export default class CategoryService {
     const category = await Category.findByOrFail('slug', slug)
     category.deactivateAt = activate ? undefined : DateTime.now()
     await category.save()
+  }
+
+  public static async saveCategory(
+    ctx: HttpContextContract,
+    category: Category
+  ): Promise<Category> {
+    await ctx.request.validate(new CategoryValidator(ctx, category.id || 0))
+
+    category.name = ctx.request.input('name')
+    category.slug = ctx.request.input('slug')
+    category.description = ctx.request.input('description')
+    category.parent_id = ctx.request.input('parent_id')
+
+    return await category.save()
   }
 }
