@@ -105,23 +105,10 @@ export default class UsersController {
     return response.noContent()
   }
 
-  public async roles({
-    bouncer,
-    params,
-    request,
-  }: HttpContextContract): Promise<ModelPaginatorContract<Role>> {
+  public async roles({ bouncer, params }: HttpContextContract): Promise<Role[]> {
     await bouncer.with('UserPolicy').authorize('viewRoles')
     const user = await User.findOrFail(params.id)
-
-    const page = request.input('page', 1)
-    const perPage = request.input('perPage', 10)
-    const orderBy = request.input('orderBy', 'name')
-    const orderDirection = request.input('orderDirection', 'asc')
-
-    return await Role.query()
-      .whereHas('users', (query) => query.where('id', user.id))
-      .orderBy(orderBy, orderDirection)
-      .paginate(page, perPage)
+    return await user.related('roles').query().orderBy('name', 'asc').exec()
   }
 
   public async permissions({ bouncer, params }: HttpContextContract): Promise<Permission[]> {
