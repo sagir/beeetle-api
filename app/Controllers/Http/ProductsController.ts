@@ -1,11 +1,10 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { schema, rules } from '@ioc:Adonis/Core/Validator'
-import Database, { DatabaseQueryBuilderContract } from '@ioc:Adonis/Lucid/Database'
+import { DatabaseQueryBuilderContract } from '@ioc:Adonis/Lucid/Database'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Product from 'App/Models/Product'
 import ProductValidator from 'App/Validators/ProductValidator'
 import { DateTime } from 'luxon'
-import Category from 'App/Models/Category'
 
 export default class ProductsController {
   public async index({
