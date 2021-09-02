@@ -6,28 +6,39 @@ import Database from '@ioc:Adonis/Lucid/Database'
 import { DateTime } from 'luxon'
 import Permission from 'App/Models/Permission'
 import User from 'App/Models/User'
+import CommonFilterQueryValidator from 'App/Validators/CommonFilterQueryValidator'
+import RoleService from 'App/Services/RoleService'
 
 export default class RolesController {
-  public async index({
-    bouncer,
-    request,
-  }: HttpContextContract): Promise<ModelPaginatorContract<Role>> {
-    await bouncer.with('RolePolicy').authorize('view')
+  public async index(ctx: HttpContextContract): Promise<ModelPaginatorContract<Role>> {
+    await ctx.bouncer.with('RolePolicy').authorize('view')
+    await ctx.request.validate(
+      new CommonFilterQueryValidator(ctx, [
+        'name',
+        'slug',
+        'description',
+        'created_at',
+        'updated_at',
+      ])
+    )
 
-    const page = request.input('page', 1)
-    const perPage = request.input('perPage', 10)
-    const active = request.input('activeItems')
-    const orderBy = request.input('orderBy', 'name')
-    const orderDirection = request.input('orderDirection', 'asc')
+    return await RoleService.getPaginatedRoles(ctx)
+  }
 
-    const query = Role.query()
+  public async inactive(ctx: HttpContextContract): Promise<ModelPaginatorContract<Role>> {
+    await ctx.bouncer.with('RolePolicy').authorize('view')
+    await ctx.request.validate(
+      new CommonFilterQueryValidator(ctx, [
+        'name',
+        'slug',
+        'description',
+        'created_at',
+        'updated_at',
+        'deactivated_at',
+      ])
+    )
 
-    if (active !== undefined) {
-      query.withScopes((q) => (active ? q.active() : q.inactive()))
-    }
-
-    query.orderBy(orderBy, orderDirection === 'desc' ? 'desc' : 'asc')
-    return await query.paginate(page, perPage)
+    return await RoleService.getPaginatedRoles(ctx, false)
   }
 
   public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {

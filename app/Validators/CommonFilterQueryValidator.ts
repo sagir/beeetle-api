@@ -1,8 +1,8 @@
 import { schema, rules } from '@ioc:Adonis/Core/Validator'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 
-export default class RoleValidator {
-  constructor(protected ctx: HttpContextContract, private roleId: number = 0) {}
+export default class CommonFilterQueryValidator {
+  constructor(protected ctx: HttpContextContract, private sortByColumns: string[] = []) {}
 
   /*
    * Define schema to validate the "shape", "type", "formatting" and "integrity" of data.
@@ -24,30 +24,11 @@ export default class RoleValidator {
    *    ```
    */
   public schema = schema.create({
-    name: schema.string({ trim: true }, [rules.minLength(3), rules.maxLength(100)]),
-    slug: schema.string({ trim: true }, [
-      rules.minLength(3),
-      rules.maxLength(100),
-      rules.notIn(['inactive']),
-      rules.unique({
-        table: 'roles',
-        column: 'slug',
-        whereNot: { id: this.roleId },
-      }),
-    ]),
-    description: schema.string.optional({ trim: true }, [
-      rules.minLength(10),
-      rules.maxLength(1000),
-    ]),
-    permissions: schema
-      .array([
-        rules.minLength(1),
-        rules.allExists({
-          table: 'permissions',
-          column: 'id',
-        }),
-      ])
-      .members(schema.number([rules.unsigned()])),
+    page: schema.number.optional([rules.unsigned()]),
+    perPage: schema.number.optional([rules.unsigned()]),
+    query: schema.string.optional({ trim: true }),
+    sortBy: schema.enum.optional(this.sortByColumns),
+    order: schema.enum.optional(['asc', 'desc'] as const),
   })
 
   /**
