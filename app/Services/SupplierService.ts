@@ -25,4 +25,20 @@ export default class SupplierService {
 
     return await query.paginate(page, perPage)
   }
+
+  public static async saveSupplier(
+    { request }: HttpContextContract,
+    supplier: Supplier
+  ): Promise<Supplier> {
+    supplier.name = request.input('name')
+    supplier.email = request.input('email')
+    supplier.password = request.input('phone')
+    supplier.address = request.input('address')
+
+    if (!supplier.id) {
+      supplier.password = request.input('password')
+    }
+
+    return await supplier.save()
+  }
 }
