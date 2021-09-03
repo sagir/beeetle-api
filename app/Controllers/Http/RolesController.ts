@@ -41,28 +41,16 @@ export default class RolesController {
     return await RoleService.getPaginatedRoles(ctx, false)
   }
 
-  public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {
-    await bouncer.with('RolePolicy').authorize('create')
-    await request.validate(RoleValidator)
-    const role = new Role()
-    const trx = await Database.transaction()
+  public async store(ctx: HttpContextContract): Promise<void> {
+    await ctx.bouncer.with('RolePolicy').authorize('create')
+    await ctx.request.validate(RoleValidator)
+    const role = await RoleService.saveRole(ctx, new Role())
 
-    role.name = request.input('name')
-    role.slug = request.input('slug')
-    role.description = request.input('description', undefined)
-
-    try {
-      await role.useTransaction(trx).save()
-      await role.related('permissions').attach(request.input('permissions'), trx)
-      await trx.commit()
-    } catch (error) {
-      await trx.rollback()
-      return response.internalServerError({
-        message: 'Something went wrong. Please try again.',
-      })
-    }
-
-    return response.created(role)
+    return role
+      ? ctx.response.created(role)
+      : ctx.response.internalServerError({
+          message: 'Something went wrong. Please try again later.',
+        })
   }
 
   public async show({ bouncer, params }: HttpContextContract): Promise<Role> {
