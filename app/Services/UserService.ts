@@ -1,6 +1,8 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+import Database from '@ioc:Adonis/Lucid/Database'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import User from 'App/Models/User'
+import { DateTime } from 'luxon'
 
 export default class UserService {
   public static async getPaginatedUsers(
@@ -35,5 +37,39 @@ export default class UserService {
     }
 
     return query.paginate(page, perPage)
+  }
+
+  public static async saveUser({ request }: HttpContextContract, user: User): Promise<User | null> {
+    const trx = await Database.transaction()
+
+    user.name = request.input('name')
+    user.email = request.input('email')
+
+    if (!user.id) {
+      user.password = request.input('password')
+    }
+
+    try {
+      await user.useTransaction(trx).save()
+      await user.related('roles').sync(request.input('roles'), undefined, trx)
+      await trx.commit()
+    } catch (error) {
+      await trx.rollback()
+      return null
+    }
+
+    return user
+  }
+
+  public static async updateState(userId: number, activate: boolean = true): Promise<boolean> {
+    const user = await User.findOrFail(userId)
+
+    if (!activate && user.id === 1) {
+      return false
+    }
+
+    user.deactivatedAt = activate ? undefined : DateTime.now()
+    await user.save()
+    return true
   }
 }

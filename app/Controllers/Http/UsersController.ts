@@ -1,8 +1,6 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import User from 'App/Models/User'
-import Database from '@ioc:Adonis/Lucid/Database'
-import { DateTime } from 'luxon'
 import Role from 'App/Models/Role'
 import Permission from 'App/Models/Permission'
 import UserCreateValidator from 'App/Validators/UserCreateValidator'
@@ -29,29 +27,16 @@ export default class UsersController {
     return await UserService.getPaginatedUsers(ctx, false)
   }
 
-  public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {
-    await bouncer.with('UserPolicy').authorize('create')
-    await request.validate(UserCreateValidator)
+  public async store(ctx: HttpContextContract): Promise<void> {
+    await ctx.bouncer.with('UserPolicy').authorize('create')
+    await ctx.request.validate(UserCreateValidator)
+    const user = await UserService.saveUser(ctx, new User())
 
-    const user = new User()
-    const trx = await Database.transaction()
-
-    user.name = request.input('name')
-    user.email = request.input('email')
-    user.password = request.input('password')
-
-    try {
-      await user.useTransaction(trx).save()
-      await user.related('roles').attach(request.input('roles'), trx)
-      await trx.commit()
-    } catch (error) {
-      await trx.rollback()
-      return response.internalServerError({
-        message: 'Something went wrong. Please try again.',
-      })
-    }
-
-    return response.created(user)
+    return user
+      ? ctx.response.created(user)
+      : ctx.response.internalServerError({
+          message: 'Something went wrong. Please try again later',
+        })
   }
 
   public async show({ bouncer, params }: HttpContextContract): Promise<User> {
@@ -63,23 +48,13 @@ export default class UsersController {
     await ctx.bouncer.with('UserPolicy').authorize('update')
     const user = await User.findOrFail(ctx.params.id)
     await ctx.request.validate(new UserUpdateValidator(ctx, user.id))
+    const res = await UserService.saveUser(ctx, user)
 
-    user.name = ctx.request.input('name')
-    user.email = ctx.request.input('email')
-    const trx = await Database.transaction()
-
-    try {
-      await user.useTransaction(trx).save()
-      await user.related('roles').sync(ctx.request.input('roles'), undefined, trx)
-      await trx.commit()
-    } catch (error) {
-      await trx.rollback()
-      return ctx.response.internalServerError({
-        message: 'Something went wrong. Please try again.',
-      })
-    }
-
-    return ctx.response.noContent()
+    return res
+      ? ctx.response.noContent()
+      : ctx.response.internalServerError({
+          message: 'Something went wrong. Please try again later.',
+        })
   }
 
   public async destroy({ bouncer, params, response }: HttpContextContract): Promise<void> {
@@ -91,18 +66,14 @@ export default class UsersController {
 
   public async activate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('UserPolicy').authorize('activate')
-    const user = await User.findOrFail(params.id)
-    user.deactivatedAt = DateTime.now()
-    await user.save()
+    await UserService.updateState(params.id, true)
     return response.noContent()
   }
 
   public async deactivate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('UserPolicy').authorize('deactivate')
-    const user = await User.findOrFail(params.id)
-    user.deactivatedAt = DateTime.now()
-    await user.save()
-    return response.noContent()
+    const res = await UserService.updateState(params.id, false)
+    return res ? response.noContent() : response.badRequest({ message: 'Operation not permitted.' })
   }
 
   public async roles({ bouncer, params }: HttpContextContract): Promise<Role[]> {
