@@ -60,6 +60,11 @@ export default class UsersController {
   public async destroy({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('UserPolicy').authorize('delete')
     const user = await User.findOrFail(params.id)
+
+    if (user.id === 1) {
+      return response.badRequest({ message: 'Operation not permitted.' })
+    }
+
     await user.delete()
     return response.noContent()
   }
