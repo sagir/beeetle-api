@@ -1,7 +1,6 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Supplier from 'App/Models/Supplier'
-import { DateTime } from 'luxon'
 import CommonFilterQueryValidator from 'App/Validators/CommonFilterQueryValidator'
 import SupplierService from 'App/Services/SupplierService'
 import SupplierCreateValidator from 'App/Validators/SupplierCreateValidator'
@@ -61,17 +60,13 @@ export default class SuppliersController {
 
   public async activate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('SupplierPolicy').authorize('activate')
-    const supplier = await Supplier.findOrFail(params.id)
-    supplier.deactivatedAt = undefined
-    await supplier.save()
+    await SupplierService.updateState(params.id, true)
     return response.noContent()
   }
 
   public async deactivate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('SupplierPolicy').authorize('activate')
-    const supplier = await Supplier.findOrFail(params.id)
-    supplier.deactivatedAt = DateTime.now()
-    await supplier.save()
+    await SupplierService.updateState(params.id, false)
     return response.noContent()
   }
 }
