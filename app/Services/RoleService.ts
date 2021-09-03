@@ -2,6 +2,7 @@ import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Role from 'App/Models/Role'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import Database from '@ioc:Adonis/Lucid/Database'
+import { DateTime } from 'luxon'
 
 export default class RoleService {
   public static async getPaginatedRoles(
@@ -44,5 +45,17 @@ export default class RoleService {
     }
 
     return role
+  }
+
+  public static async updateState(slug: string, activate: boolean = true): Promise<boolean> {
+    const role = await Role.findByOrFail('slug', slug)
+
+    if (!activate && role.id === 1) {
+      return false
+    }
+
+    role.deactivatedAt = activate ? undefined : DateTime.now()
+    await role.save()
+    return true
   }
 }

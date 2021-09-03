@@ -84,17 +84,13 @@ export default class RolesController {
 
   public async deactivate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('RolePolicy').authorize('activate')
-    const role = await Role.findByOrFail('slug', params.slug)
-    role.deactivatedAt = DateTime.now()
-    await role.save()
-    return response.noContent()
+    const res = await RoleService.updateState(params.slug, false)
+    return res ? response.noContent() : response.badRequest({ message: 'Operation not permitted' })
   }
 
   public async activate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('RolePolicy').authorize('activate')
-    const role = await Role.findByOrFail('slug', params.slug)
-    role.deactivatedAt = undefined
-    await role.save()
+    await RoleService.updateState(params.slug, true)
     return response.noContent()
   }
 
