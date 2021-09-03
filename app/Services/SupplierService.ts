@@ -1,6 +1,7 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Supplier from 'App/Models/Supplier'
+import { DateTime } from 'luxon'
 
 export default class SupplierService {
   public static async getPaginatedSuppliers(
@@ -24,5 +25,27 @@ export default class SupplierService {
     }
 
     return await query.paginate(page, perPage)
+  }
+
+  public static async saveSupplier(
+    { request }: HttpContextContract,
+    supplier: Supplier
+  ): Promise<Supplier> {
+    supplier.name = request.input('name')
+    supplier.email = request.input('email')
+    supplier.password = request.input('phone')
+    supplier.address = request.input('address')
+
+    if (!supplier.id) {
+      supplier.password = request.input('password')
+    }
+
+    return await supplier.save()
+  }
+
+  public static async updateState(supplierId: number, activate: boolean = true): Promise<void> {
+    const supplier = await Supplier.findOrFail(supplierId)
+    supplier.deactivatedAt = activate ? undefined : DateTime.now()
+    await supplier.save()
   }
 }
