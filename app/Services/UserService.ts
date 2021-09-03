@@ -2,6 +2,7 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import Database from '@ioc:Adonis/Lucid/Database'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import User from 'App/Models/User'
+import { DateTime } from 'luxon'
 
 export default class UserService {
   public static async getPaginatedUsers(
@@ -58,5 +59,17 @@ export default class UserService {
     }
 
     return user
+  }
+
+  public static async updateState(userId: number, activate: boolean = true): Promise<boolean> {
+    const user = await User.findOrFail(userId)
+
+    if (!activate && user.id === 1) {
+      return false
+    }
+
+    user.deactivatedAt = activate ? undefined : DateTime.now()
+    await user.save()
+    return true
   }
 }

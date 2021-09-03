@@ -1,7 +1,6 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import User from 'App/Models/User'
-import { DateTime } from 'luxon'
 import Role from 'App/Models/Role'
 import Permission from 'App/Models/Permission'
 import UserCreateValidator from 'App/Validators/UserCreateValidator'
@@ -67,18 +66,14 @@ export default class UsersController {
 
   public async activate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('UserPolicy').authorize('activate')
-    const user = await User.findOrFail(params.id)
-    user.deactivatedAt = DateTime.now()
-    await user.save()
+    await UserService.updateState(params.id, true)
     return response.noContent()
   }
 
   public async deactivate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('UserPolicy').authorize('deactivate')
-    const user = await User.findOrFail(params.id)
-    user.deactivatedAt = DateTime.now()
-    await user.save()
-    return response.noContent()
+    const res = await UserService.updateState(params.id, false)
+    return res ? response.noContent() : response.badRequest({ message: 'Operation not permitted.' })
   }
 
   public async roles({ bouncer, params }: HttpContextContract): Promise<Role[]> {
