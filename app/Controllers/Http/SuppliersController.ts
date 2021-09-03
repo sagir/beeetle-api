@@ -3,27 +3,17 @@ import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Supplier from 'App/Models/Supplier'
 import { schema, rules } from '@ioc:Adonis/Core/Validator'
 import { DateTime } from 'luxon'
+import CommonFilterQueryValidator from 'App/Validators/CommonFilterQueryValidator'
+import SupplierService from 'App/Services/SupplierService'
 
 export default class SuppliersController {
-  public async index({
-    bouncer,
-    request,
-  }: HttpContextContract): Promise<ModelPaginatorContract<Supplier>> {
-    await bouncer.with('SupplierPolicy').authorize('view')
+  public async index(ctx: HttpContextContract): Promise<ModelPaginatorContract<Supplier>> {
+    await ctx.bouncer.with('SupplierPolicy').authorize('view')
+    await ctx.request.validate(
+      new CommonFilterQueryValidator(ctx, ['name', 'email', 'created_at', 'updated_at'])
+    )
 
-    const page = request.input('page', 1)
-    const perPage = request.input('perPage', 10)
-    const active = request.input('activeItems')
-    const orderBy = request.input('orderBy', 'name')
-    const orderDirection = request.input('orderDirection', 'asc')
-
-    const query = Supplier.query().orderBy(orderBy, orderDirection)
-
-    if (active !== undefined) {
-      query.withScopes((q) => (active ? q.active() : q.inactive()))
-    }
-
-    return await query.paginate(page, perPage)
+    return await SupplierService.getPaginatedSuppliers(ctx)
   }
 
   public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {
