@@ -2,6 +2,7 @@ import Route from '@ioc:Adonis/Core/Route'
 
 Route.group(() => {
   Route.get('', 'StoresController.index').as('index')
+  Route.get('inactive', 'StoresController.inactive').as('index.inactive')
   Route.post('', 'StoresController.store').as('store')
   Route.get(':slug', 'StoresController.show').as('show')
   Route.put(':slug', 'StoresController.update').as('update')

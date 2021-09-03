@@ -15,6 +15,22 @@ export default class StoresController {
     return StoreService.getPaginatedStores(ctx)
   }
 
+  public async inactive(ctx: HttpContextContract): Promise<ModelPaginatorContract<Store>> {
+    await ctx.bouncer.with('StorePolicy').authorize('view')
+    await ctx.request.validate(
+      new CommonFilterQueryValidator(ctx, [
+        'name',
+        'slug',
+        'created_at',
+        'updated_at',
+        'address',
+        'deactivated_at',
+      ])
+    )
+
+    return StoreService.getPaginatedStores(ctx, false)
+  }
+
   public async store(ctx: HttpContextContract): Promise<void> {
     await ctx.bouncer.with('StorePolicy').authorize('create')
     const store = await StoreService.saveStore(ctx, new Store())
