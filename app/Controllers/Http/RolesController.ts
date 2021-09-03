@@ -2,7 +2,6 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Role from 'App/Models/Role'
 import RoleValidator from 'App/Validators/RoleValidator'
-import { DateTime } from 'luxon'
 import Permission from 'App/Models/Permission'
 import User from 'App/Models/User'
 import CommonFilterQueryValidator from 'App/Validators/CommonFilterQueryValidator'
@@ -101,22 +100,27 @@ export default class RolesController {
     return role.permissions
   }
 
-  public async users({
-    bouncer,
-    params,
-    request,
-  }: HttpContextContract): Promise<ModelPaginatorContract<User>> {
-    await bouncer.with('RolePolicy').authorize('viewUsers')
-    const role = await Role.findByOrFail('slug', params.slug)
+  public async users(ctx: HttpContextContract): Promise<ModelPaginatorContract<User>> {
+    await ctx.bouncer.with('RolePolicy').authorize('viewUsers')
+    const role = await Role.findByOrFail('slug', ctx.params.slug)
+    await ctx.request.validate(
+      new CommonFilterQueryValidator(ctx, ['name', 'email', 'created_at', 'updated_at'])
+    )
 
-    const page = request.input('page', 1)
-    const perPage = request.input('perPage', 10)
-    const orderBy = request.input('orderBy', 'name')
-    const orderDirection = request.input('orderDirection', 'asc')
+    const page = ctx.request.input('page', 1)
+    const perPage = ctx.request.input('perPage', 10)
+    const search = ctx.request.input('query')
+    const sortBy = ctx.request.input('sortBy', 'name')
+    const order = ctx.request.input('order', 'asc')
 
-    return await User.query()
-      .whereHas('roles', (query) => query.where('id', role.id))
-      .orderBy(orderBy, orderDirection)
-      .paginate(page, perPage)
+    const query = role.related('users').query().orderBy(sortBy, order)
+
+    if (search) {
+      query.andWhere((q) => {
+        q.where('name', 'like', `%${search}%`).orWhere('name', 'like', `%${search}%`)
+      })
+    }
+
+    return query.paginate(page, perPage)
   }
 }
