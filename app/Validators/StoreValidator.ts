@@ -31,6 +31,7 @@ export default class StoreValidator {
     ]),
     slug: schema.string({ trim: true }, [
       rules.required(),
+      rules.notIn(['inactive']),
       rules.minLength(3),
       rules.maxLength(100),
       rules.unique({
