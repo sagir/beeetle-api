@@ -73,6 +73,11 @@ export default class RolesController {
   public async destroy({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('RolePolicy').authorize('delete')
     const role = await Role.findByOrFail('slug', params.slug)
+
+    if (role.id === 1) {
+      return response.badRequest({ message: 'Operation not permitted' })
+    }
+
     await role.delete()
     return response.noContent()
   }
