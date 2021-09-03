@@ -39,6 +39,7 @@ export default class UserCreateValidator {
     ]),
     password: schema.string({ trim: true }, [
       rules.required(),
+      rules.confirmed(),
       rules.minLength(6),
       rules.maxLength(16),
     ]),
