@@ -16,6 +16,21 @@ export default class SuppliersController {
     return await SupplierService.getPaginatedSuppliers(ctx)
   }
 
+  public async inactive(ctx: HttpContextContract): Promise<ModelPaginatorContract<Supplier>> {
+    await ctx.bouncer.with('SupplierPolicy').authorize('view')
+    await ctx.request.validate(
+      new CommonFilterQueryValidator(ctx, [
+        'name',
+        'email',
+        'created_at',
+        'updated_at',
+        'deactivated_at',
+      ])
+    )
+
+    return await SupplierService.getPaginatedSuppliers(ctx, false)
+  }
+
   public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {
     await bouncer.with('SupplierPolicy').authorize('create')
 
