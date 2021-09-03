@@ -2,7 +2,6 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Role from 'App/Models/Role'
 import RoleValidator from 'App/Validators/RoleValidator'
-import Database from '@ioc:Adonis/Lucid/Database'
 import { DateTime } from 'luxon'
 import Permission from 'App/Models/Permission'
 import User from 'App/Models/User'
@@ -62,24 +61,13 @@ export default class RolesController {
     await ctx.bouncer.with('RolePolicy').authorize('update')
     const role = await Role.findByOrFail('slug', ctx.params.slug)
     await ctx.request.validate(new RoleValidator(ctx, role.id))
-    const trx = await Database.transaction()
+    const res = await RoleService.saveRole(ctx, role)
 
-    role.name = ctx.request.input('name')
-    role.slug = ctx.request.input('slug')
-    role.description = ctx.request.input('description')
-
-    try {
-      await role.useTransaction(trx).save()
-      await role.related('permissions').sync(ctx.request.input('permissions'), undefined, trx)
-      await trx.commit()
-    } catch (error) {
-      await trx.rollback()
-      return ctx.response.internalServerError({
-        message: 'Something went wrong. Please try again.',
-      })
-    }
-
-    return ctx.response.noContent()
+    return res
+      ? ctx.response.noContent()
+      : ctx.response.internalServerError({
+          message: 'Something went wrong. Please try again later.',
+        })
   }
 
   public async destroy({ bouncer, params, response }: HttpContextContract): Promise<void> {
