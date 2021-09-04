@@ -16,6 +16,15 @@ export default class SpecificationsController {
     return await SpecificationService.getPaginatedSpecifications(ctx)
   }
 
+  public async inactive(ctx: HttpContextContract): Promise<ModelPaginatorContract<Specification>> {
+    await ctx.bouncer.with('SpecificationPolicy').authorize('view')
+    await ctx.request.validate(
+      new CommonFilterQueryValidator(ctx, ['name', 'created_at', 'updated_at'])
+    )
+
+    return await SpecificationService.getPaginatedSpecifications(ctx, false)
+  }
+
   public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {
     await bouncer.with('SpecificationPolicy').authorize('create')
     await request.validate(SpecifactionValidator)
