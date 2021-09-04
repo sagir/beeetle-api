@@ -1,6 +1,4 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import { schema, rules } from '@ioc:Adonis/Core/Validator'
-import { DatabaseQueryBuilderContract } from '@ioc:Adonis/Lucid/Database'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Product from 'App/Models/Product'
 import ProductService from 'App/Services/ProductService'
