@@ -54,17 +54,13 @@ export default class SpecificationsController {
 
   public async activate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('SpecificationPolicy').authorize('activate')
-    const specification = await Specification.findOrFail(params.id)
-    specification.deactivatedAt = undefined
-    await specification.save()
+    await SpecificationService.updateState(params.id, true)
     return response.noContent()
   }
 
   public async deactivate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('SpecificationPolicy').authorize('activate')
-    const specification = await Specification.findOrFail(params.id)
-    specification.deactivatedAt = DateTime.now()
-    await specification.save()
+    await SpecificationService.updateState(params.id, false)
     return response.noContent()
   }
 }

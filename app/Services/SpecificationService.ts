@@ -1,6 +1,7 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Specification from 'App/Models/Specification'
+import { DateTime } from 'luxon'
 
 export default class SpecificationService {
   public static async getPaginatedSpecifications(
@@ -33,5 +34,14 @@ export default class SpecificationService {
     specification.name = request.input('name')
     specification.description = request.input('description')
     return await specification.save()
+  }
+
+  public static async updateState(
+    specificationId: number,
+    activate: boolean = true
+  ): Promise<void> {
+    const specification = await Specification.findOrFail(specificationId)
+    specification.deactivatedAt = activate ? undefined : DateTime.now()
+    await specification.save()
   }
 }
