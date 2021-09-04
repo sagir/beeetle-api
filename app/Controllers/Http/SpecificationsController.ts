@@ -2,8 +2,7 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Specification from 'App/Models/Specification'
 import CommonFilterQueryValidator from 'App/Validators/CommonFilterQueryValidator'
-import SpecifactionValidator from 'App/Validators/SpecifactionValidator'
-import { DateTime } from 'luxon'
+import SpecificationValidator from 'App/Validators/SpecificationValidator'
 import SpecificationService from '../../Services/SpecificationService'
 
 export default class SpecificationsController {
@@ -27,7 +26,7 @@ export default class SpecificationsController {
 
   public async store(ctx: HttpContextContract): Promise<void> {
     await ctx.bouncer.with('SpecificationPolicy').authorize('create')
-    await ctx.request.validate(SpecifactionValidator)
+    await ctx.request.validate(SpecificationValidator)
     const specification = await SpecificationService.saveSpecification(ctx, new Specification())
     return ctx.response.created(specification)
   }
@@ -40,7 +39,7 @@ export default class SpecificationsController {
   public async update(ctx: HttpContextContract): Promise<void> {
     await ctx.bouncer.with('SpecificationPolicy').authorize('update')
     const specification = await Specification.findOrFail(ctx.params.id)
-    await ctx.request.validate(new SpecifactionValidator(ctx, specification.id))
+    await ctx.request.validate(new SpecificationValidator(ctx, specification.id))
     await SpecificationService.saveSpecification(ctx, specification)
     return ctx.response.noContent()
   }
