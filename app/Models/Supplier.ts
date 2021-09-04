@@ -1,7 +1,8 @@
 import { DateTime } from 'luxon'
-import { BaseModel, beforeSave, column, scope } from '@ioc:Adonis/Lucid/Orm'
+import { BaseModel, beforeSave, column, ManyToMany, manyToMany, scope } from '@ioc:Adonis/Lucid/Orm'
 import { active, inactive } from 'App/utils/database/scopes'
 import Hash from '@ioc:Adonis/Core/Hash'
+import Product from './Product'
 
 export default class Supplier extends BaseModel {
   @column({ isPrimary: true })
@@ -37,6 +38,16 @@ export default class Supplier extends BaseModel {
       user.password = await Hash.make(user.password)
     }
   }
+
+  @manyToMany(() => Product, {
+    pivotTable: 'stocks',
+    pivotColumns: ['quantity', 'store_id'],
+    pivotForeignKey: 'supplid_id',
+    pivotRelatedForeignKey: 'product_id',
+    localKey: 'id',
+    relatedKey: 'id',
+  })
+  public products: ManyToMany<typeof Product>
 
   // scopes
   public static active = scope(active)
