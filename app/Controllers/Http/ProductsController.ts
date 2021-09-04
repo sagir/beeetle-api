@@ -11,8 +11,18 @@ import { DateTime } from 'luxon'
 export default class ProductsController {
   public async index(ctx: HttpContextContract): Promise<ModelPaginatorContract<Product>> {
     await ctx.bouncer.with('ProductPolicy').authorize('view')
-    await ctx.request.validate(new CommonFilterQueryValidator(ctx, ['name', 'description', 'created_at', 'updated_at']))
+    await ctx.request.validate(
+      new CommonFilterQueryValidator(ctx, ['name', 'description', 'created_at', 'updated_at'])
+    )
     return await ProductService.getPaginatedProducts(ctx)
+  }
+
+  public async inactive(ctx: HttpContextContract): Promise<ModelPaginatorContract<Product>> {
+    await ctx.bouncer.with('ProductPolicy').authorize('view')
+    await ctx.request.validate(
+      new CommonFilterQueryValidator(ctx, ['name', 'description', 'created_at', 'updated_at'])
+    )
+    return await ProductService.getPaginatedProducts(ctx, false)
   }
 
   public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {
