@@ -35,9 +35,21 @@ export default class RoleService {
     role.slug = request.input('slug')
     role.description = request.input('description', undefined)
 
+    const permissions = request.input('permissions') as number[]
+    const dependencies = await Database.from('permission_dependency')
+      .whereIn('permission_id', permissions)
+      .select('depends_on')
+      .exec()
+
+    const allPermissions = [...permissions, ...dependencies.map((item) => item.depends_on)]
+
     try {
       await role.useTransaction(trx).save()
-      await role.related('permissions').sync(request.input('permissions'), undefined, trx)
+      await role.related('permissions').sync(
+        [...new Set(allPermissions)], // unique items only
+        undefined,
+        trx
+      )
       await trx.commit()
     } catch (error) {
       trx.rollback()
