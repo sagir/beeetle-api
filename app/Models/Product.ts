@@ -12,6 +12,8 @@ import { active, inactive } from 'App/utils/database/scopes'
 import ProductImage from './ProductImage'
 import Specification from './Specification'
 import Category from './Category'
+import Supplier from './Supplier'
+import Store from './Store'
 
 export default class Product extends BaseModel {
   @column({ isPrimary: true })
@@ -58,6 +60,26 @@ export default class Product extends BaseModel {
     },
   })
   public categories: ManyToMany<typeof Category>
+
+  @manyToMany(() => Supplier, {
+    pivotTable: 'stocks',
+    pivotColumns: ['quantity', 'store_id'],
+    pivotForeignKey: 'product_id',
+    pivotRelatedForeignKey: 'supplier_id',
+    localKey: 'id',
+    relatedKey: 'id',
+  })
+  public suppliers: ManyToMany<typeof Supplier>
+
+  @manyToMany(() => Store, {
+    pivotTable: 'stocks',
+    pivotColumns: ['quantity', 'supplier_id'],
+    pivotForeignKey: 'product_id',
+    pivotRelatedForeignKey: 'store_id',
+    localKey: 'id',
+    relatedKey: 'id',
+  })
+  public stores: ManyToMany<typeof Store>
 
   // scopes
   public static active = scope(active)

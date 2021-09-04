@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, scope } from '@ioc:Adonis/Lucid/Orm'
+import { BaseModel, column, ManyToMany, manyToMany, scope } from '@ioc:Adonis/Lucid/Orm'
 import { active, inactive } from 'App/utils/database/scopes'
+import Product from 'App/Models/Product'
 
 export default class Store extends BaseModel {
   @column({ isPrimary: true })
@@ -26,6 +27,16 @@ export default class Store extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   public updatedAt: DateTime
+
+  @manyToMany(() => Product, {
+    pivotTable: 'stocks',
+    pivotColumns: ['quantity', 'supplier_id'],
+    pivotForeignKey: 'store_id',
+    pivotRelatedForeignKey: 'product_id',
+    localKey: 'id',
+    relatedKey: 'id',
+  })
+  public products: ManyToMany<typeof Product>
 
   // scopes
   public static active = scope(active)
