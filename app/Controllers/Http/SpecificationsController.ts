@@ -25,16 +25,11 @@ export default class SpecificationsController {
     return await SpecificationService.getPaginatedSpecifications(ctx, false)
   }
 
-  public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {
-    await bouncer.with('SpecificationPolicy').authorize('create')
-    await request.validate(SpecifactionValidator)
-    const specification = new Specification()
-
-    specification.name = request.input('name')
-    specification.description = request.input('description')
-
-    await specification.save()
-    return response.created(specification)
+  public async store(ctx: HttpContextContract): Promise<void> {
+    await ctx.bouncer.with('SpecificationPolicy').authorize('create')
+    await ctx.request.validate(SpecifactionValidator)
+    const specification = await SpecificationService.saveSpecification(ctx, new Specification())
+    return ctx.response.created(specification)
   }
 
   public async show({ bouncer, params }: HttpContextContract): Promise<Specification> {
@@ -46,11 +41,7 @@ export default class SpecificationsController {
     await ctx.bouncer.with('SpecificationPolicy').authorize('update')
     const specification = await Specification.findOrFail(ctx.params.id)
     await ctx.request.validate(new SpecifactionValidator(ctx, specification.id))
-
-    specification.name = ctx.request.input('name')
-    specification.description = ctx.request.input('description')
-
-    await specification.save()
+    await SpecificationService.saveSpecification(ctx, specification)
     return ctx.response.noContent()
   }
 

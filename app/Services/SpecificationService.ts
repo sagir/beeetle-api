@@ -25,4 +25,13 @@ export default class SpecificationService {
 
     return await query.paginate(page, perPage)
   }
+
+  public static async saveSpecification(
+    { request }: HttpContextContract,
+    specification: Specification
+  ): Promise<Specification> {
+    specification.name = request.input('name')
+    specification.description = request.input('description')
+    return await specification.save()
+  }
 }
