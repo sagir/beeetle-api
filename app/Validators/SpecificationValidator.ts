@@ -1,7 +1,7 @@
 import { schema, rules } from '@ioc:Adonis/Core/Validator'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 
-export default class SpecifactionValidator {
+export default class SpecificationValidator {
   constructor(protected ctx: HttpContextContract, private specificationId: number = 0) {}
 
   /*
@@ -26,6 +26,7 @@ export default class SpecifactionValidator {
   public schema = schema.create({
     name: schema.string({ trim: true }, [
       rules.required(),
+      rules.notIn(['inactive']),
       rules.minLength(3),
       rules.maxLength(100),
       rules.unique({

@@ -1,41 +1,34 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Specification from 'App/Models/Specification'
-import SpecifactionValidator from 'App/Validators/SpecifactionValidator'
-import { DateTime } from 'luxon'
+import CommonFilterQueryValidator from 'App/Validators/CommonFilterQueryValidator'
+import SpecificationValidator from 'App/Validators/SpecificationValidator'
+import SpecificationService from '../../Services/SpecificationService'
 
 export default class SpecificationsController {
-  public async index({
-    bouncer,
-    request,
-  }: HttpContextContract): Promise<ModelPaginatorContract<Specification>> {
-    await bouncer.with('SpecificationPolicy').authorize('view')
+  public async index(ctx: HttpContextContract): Promise<ModelPaginatorContract<Specification>> {
+    await ctx.bouncer.with('SpecificationPolicy').authorize('view')
+    await ctx.request.validate(
+      new CommonFilterQueryValidator(ctx, ['name', 'created_at', 'updated_at'])
+    )
 
-    const page = request.input('page', 1)
-    const perPage = request.input('perPage', 10)
-    const active = request.input('activeItems')
-    const orderBy = request.input('orderBy', 'name')
-    const orderDirection = request.input('orderDirection', 'asc')
-
-    const query = Specification.query().orderBy(orderBy, orderDirection)
-
-    if (active !== undefined) {
-      query.withScopes((q) => (active ? q.active() : q.inactive))
-    }
-
-    return await query.paginate(page, perPage)
+    return await SpecificationService.getPaginatedSpecifications(ctx)
   }
 
-  public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {
-    await bouncer.with('SpecificationPolicy').authorize('create')
-    await request.validate(SpecifactionValidator)
-    const specification = new Specification()
+  public async inactive(ctx: HttpContextContract): Promise<ModelPaginatorContract<Specification>> {
+    await ctx.bouncer.with('SpecificationPolicy').authorize('view')
+    await ctx.request.validate(
+      new CommonFilterQueryValidator(ctx, ['name', 'created_at', 'updated_at'])
+    )
 
-    specification.name = request.input('name')
-    specification.description = request.input('description')
+    return await SpecificationService.getPaginatedSpecifications(ctx, false)
+  }
 
-    await specification.save()
-    return response.created(specification)
+  public async store(ctx: HttpContextContract): Promise<void> {
+    await ctx.bouncer.with('SpecificationPolicy').authorize('create')
+    await ctx.request.validate(SpecificationValidator)
+    const specification = await SpecificationService.saveSpecification(ctx, new Specification())
+    return ctx.response.created(specification)
   }
 
   public async show({ bouncer, params }: HttpContextContract): Promise<Specification> {
@@ -46,12 +39,8 @@ export default class SpecificationsController {
   public async update(ctx: HttpContextContract): Promise<void> {
     await ctx.bouncer.with('SpecificationPolicy').authorize('update')
     const specification = await Specification.findOrFail(ctx.params.id)
-    await ctx.request.validate(new SpecifactionValidator(ctx, specification.id))
-
-    specification.name = ctx.request.input('name')
-    specification.description = ctx.request.input('description')
-
-    await specification.save()
+    await ctx.request.validate(new SpecificationValidator(ctx, specification.id))
+    await SpecificationService.saveSpecification(ctx, specification)
     return ctx.response.noContent()
   }
 
@@ -64,17 +53,13 @@ export default class SpecificationsController {
 
   public async activate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('SpecificationPolicy').authorize('activate')
-    const specification = await Specification.findOrFail(params.id)
-    specification.deactivatedAt = undefined
-    await specification.save()
+    await SpecificationService.updateState(params.id, true)
     return response.noContent()
   }
 
   public async deactivate({ bouncer, params, response }: HttpContextContract): Promise<void> {
     await bouncer.with('SpecificationPolicy').authorize('activate')
-    const specification = await Specification.findOrFail(params.id)
-    specification.deactivatedAt = DateTime.now()
-    await specification.save()
+    await SpecificationService.updateState(params.id, false)
     return response.noContent()
   }
 }

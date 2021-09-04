@@ -24,6 +24,9 @@ export default class Specification extends BaseModel {
 
   @manyToMany(() => Product, {
     pivotColumns: ['value', 'visible'],
+    onQuery(query) {
+      query.withScopes((q) => q.active())
+    },
   })
   public products: ManyToMany<typeof Product>
 
