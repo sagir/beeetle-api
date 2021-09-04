@@ -3,36 +3,16 @@ import { schema, rules } from '@ioc:Adonis/Core/Validator'
 import { DatabaseQueryBuilderContract } from '@ioc:Adonis/Lucid/Database'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Product from 'App/Models/Product'
+import ProductService from 'App/Services/ProductService'
+import CommonFilterQueryValidator from 'App/Validators/CommonFilterQueryValidator'
 import ProductValidator from 'App/Validators/ProductValidator'
 import { DateTime } from 'luxon'
 
 export default class ProductsController {
-  public async index({
-    bouncer,
-    request,
-  }: HttpContextContract): Promise<ModelPaginatorContract<Product>> {
-    await bouncer.with('ProductPolicy').authorize('view')
-
-    const page = request.input('page', 1)
-    const perPage = request.input('perPage', 10)
-    const search = request.input('query')
-    const active = request.input('activeItems')
-    const orderBy = request.input('orderBy', 'name')
-    const orderDirection = request.input('orderDirection', 'asc')
-
-    const query = Product.query().orderBy(orderBy, orderDirection)
-
-    if (active !== undefined) {
-      query.withScopes((q) => (active ? q.active() : q.inactive()))
-    }
-
-    if (search) {
-      query.where((q) => {
-        q.where('name', 'like', `%${search}%`).orWhere('description', 'like', `%${search}%`)
-      })
-    }
-
-    return await query.paginate(page, perPage)
+  public async index(ctx: HttpContextContract): Promise<ModelPaginatorContract<Product>> {
+    await ctx.bouncer.with('ProductPolicy').authorize('view')
+    await ctx.request.validate(new CommonFilterQueryValidator(ctx, ['name', 'description', 'created_at', 'updated_at']))
+    return await ProductService.getPaginatedProducts(ctx)
   }
 
   public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {
