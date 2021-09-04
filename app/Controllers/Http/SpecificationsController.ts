@@ -1,29 +1,19 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Specification from 'App/Models/Specification'
+import CommonFilterQueryValidator from 'App/Validators/CommonFilterQueryValidator'
 import SpecifactionValidator from 'App/Validators/SpecifactionValidator'
 import { DateTime } from 'luxon'
+import SpecificationService from '../../Services/SpecificationService'
 
 export default class SpecificationsController {
-  public async index({
-    bouncer,
-    request,
-  }: HttpContextContract): Promise<ModelPaginatorContract<Specification>> {
-    await bouncer.with('SpecificationPolicy').authorize('view')
+  public async index(ctx: HttpContextContract): Promise<ModelPaginatorContract<Specification>> {
+    await ctx.bouncer.with('SpecificationPolicy').authorize('view')
+    await ctx.request.validate(
+      new CommonFilterQueryValidator(ctx, ['name', 'created_at', 'updated_at'])
+    )
 
-    const page = request.input('page', 1)
-    const perPage = request.input('perPage', 10)
-    const active = request.input('activeItems')
-    const orderBy = request.input('orderBy', 'name')
-    const orderDirection = request.input('orderDirection', 'asc')
-
-    const query = Specification.query().orderBy(orderBy, orderDirection)
-
-    if (active !== undefined) {
-      query.withScopes((q) => (active ? q.active() : q.inactive))
-    }
-
-    return await query.paginate(page, perPage)
+    return await SpecificationService.getPaginatedSpecifications(ctx)
   }
 
   public async store({ bouncer, request, response }: HttpContextContract): Promise<void> {
