@@ -1,6 +1,7 @@
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import Product from 'App/Models/Product'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+import { DateTime } from 'luxon'
 
 export default class ProductService {
   public static async getPaginatedProducts(
@@ -24,5 +25,21 @@ export default class ProductService {
     }
 
     return await query.paginate(page, perPage)
+  }
+
+  public static async saveProduct(
+    { request }: HttpContextContract,
+    product: Product
+  ): Promise<Product> {
+    product.name = request.input('name')
+    product.slug = request.input('slug')
+    product.code = request.input('code')
+    product.description = request.input('description')
+
+    if (!product.id) {
+      product.deactivatedAt = DateTime.now()
+    }
+
+    return await product.save()
   }
 }
