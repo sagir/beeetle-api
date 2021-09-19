@@ -1,5 +1,6 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
+import Category from 'App/Models/Category'
 import Product from 'App/Models/Product'
 import ProductService from 'App/Services/ProductService'
 import CommonFilterQueryValidator from 'App/Validators/CommonFilterQueryValidator'
@@ -7,6 +8,8 @@ import ProductCategoryListValidator from 'App/Validators/ProductCategoryListVali
 import ProductSpecificationListValidator from 'App/Validators/ProductSpecificationListValidator'
 import ProductValidator from 'App/Validators/ProductValidator'
 import { DateTime } from 'luxon'
+import Database from '@ioc:Adonis/Lucid/Database'
+import ProductSpecification from 'App/Responses/ProductSpecificationsResponse'
 
 export default class ProductsController {
   public async index(ctx: HttpContextContract): Promise<ModelPaginatorContract<Product>> {
@@ -89,6 +92,21 @@ export default class ProductsController {
     return response.noContent()
   }
 
+  public async categories({ bouncer, params }: HttpContextContract): Promise<Category[]> {
+    await bouncer.with('ProductPolicy').authorize('viewCategories')
+    const product = await Product.findByOrFail('slug', params.slug)
+
+    return await product
+      .related('categories')
+      .query()
+      .withScopes((q) => q.active())
+      .andWhereNotNull('parent_id')
+      .andWhereHas('parent', (q) => q.withScopes((pq) => pq.active()))
+      .select('id', 'name')
+      .orderBy('name', 'asc')
+      .exec()
+  }
+
   public async updateCategories({
     bouncer,
     params,
@@ -100,6 +118,28 @@ export default class ProductsController {
     await request.validate(ProductCategoryListValidator)
     await product.related('categories').sync(request.input('categories'))
     return response.noContent()
+  }
+
+  public async specifications({
+    bouncer,
+    params,
+  }: HttpContextContract): Promise<ProductSpecification[]> {
+    await bouncer.with('ProductPolicy').authorize('viewSpecifications')
+    const product = await Product.findByOrFail('slug', params.slug)
+
+    return await Database.from('product_specification')
+      .where('product_id', product.id)
+      .andWhereExists((query) => {
+        query
+          .from('specifications')
+          .whereColumn('product_specification.specification_id', 'specifications.id')
+          .andWhere((query) => {
+            query.whereNull('deactivated_at').orWhere('deactivated_at', '>', DateTime.now().toSQL())
+          })
+      })
+      .select('specification_id as id')
+      .select('value', 'visible')
+      .exec()
   }
 
   public async updateSpecifications({
