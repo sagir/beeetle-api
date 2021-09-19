@@ -6,7 +6,9 @@ Route.group(() => {
   Route.post('', 'ProductsController.store').as('store')
   Route.get(':slug', 'ProductsController.show').as('show')
 
+  Route.get(':slug/categories', 'ProductsController.categories').as('categories.index')
   Route.put(':slug/categories', 'ProductsController.updateCategories').as('categories.update')
+
   Route.put(':slug/specifications', 'ProductsController.updateSpecifications').as(
     'specifications.update'
   )

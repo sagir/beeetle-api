@@ -1,5 +1,6 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
+import Category from 'App/Models/Category'
 import Product from 'App/Models/Product'
 import ProductService from 'App/Services/ProductService'
 import CommonFilterQueryValidator from 'App/Validators/CommonFilterQueryValidator'
@@ -87,6 +88,21 @@ export default class ProductsController {
     product.deactivatedAt = DateTime.now()
     await product.save()
     return response.noContent()
+  }
+
+  public async categories({ bouncer, params }: HttpContextContract): Promise<Category[]> {
+    await bouncer.with('ProductPolicy').authorize('viewCategories')
+    const product = await Product.findByOrFail('slug', params.slug)
+
+    return await product
+      .related('categories')
+      .query()
+      .withScopes((q) => q.active())
+      .andWhereNotNull('parent_id')
+      .andWhereHas('parent', (q) => q.withScopes((pq) => pq.active()))
+      .select('id', 'name')
+      .orderBy('name', 'asc')
+      .exec()
   }
 
   public async updateCategories({
