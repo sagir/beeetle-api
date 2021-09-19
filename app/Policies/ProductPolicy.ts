@@ -16,6 +16,13 @@ export default class ProductPolicy extends BasePolicy {
     ])
   }
 
+  public async viewSpecifications(user: User): Promise<boolean> {
+    return await hasPermissions(user, [
+      { model: this.model, action: 'read' },
+      { model: 'specification', action: 'read' },
+    ])
+  }
+
   public async create(user: User): Promise<boolean> {
     return await hasPermission(user, this.model, 'create')
   }

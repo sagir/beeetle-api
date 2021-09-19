@@ -9,6 +9,7 @@ Route.group(() => {
   Route.get(':slug/categories', 'ProductsController.categories').as('categories.index')
   Route.put(':slug/categories', 'ProductsController.updateCategories').as('categories.update')
 
+  Route.get(':slug/specifications', 'ProductsController.specifications').as('specifications.index')
   Route.put(':slug/specifications', 'ProductsController.updateSpecifications').as(
     'specifications.update'
   )
